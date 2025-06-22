@@ -61,13 +61,13 @@ export class ChatbotApiClient {
         const { done, value } = await reader.read();
         
         if (done) {
-          yield { content: '', done: true };
+          yield { data: '', done: true };
           break;
         }
 
         const chunk = decoder.decode(value, { stream: true });
         if (chunk.trim()) {
-          yield { content: chunk, done: false };
+          yield { data: chunk, done: false };
         }
       }
     } finally {
