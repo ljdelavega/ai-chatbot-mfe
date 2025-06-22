@@ -5,13 +5,13 @@ import { useChat, useWidgetConfig, useWidgetState } from '../hooks'
 
 
 function IntegratedWidget() {
-  // Mock configuration for development - in real embedding this would come from data attributes
+  // Configuration from environment variables - in real embedding this would come from data attributes
   const mockConfig = {
-    baseUrl: 'http://localhost:8000',
-    apiKey: 'demo-api-key-12345678',
+    baseUrl: import.meta.env.VITE_API_URL || 'http://localhost:8000',
+    apiKey: import.meta.env.VITE_API_KEY || 'your-api-key',
     themeColor: '#3b82f6',
-    enableHistory: false,
-    debug: true
+    enableHistory: import.meta.env.VITE_ENABLE_HISTORY === 'true' || false,
+    debug: import.meta.env.VITE_DEBUG_MODE === 'true' || true
   }
 
   // Use our new hooks

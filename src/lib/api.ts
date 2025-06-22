@@ -156,8 +156,9 @@ export class ChatbotApiClient {
             
             if (trimmedLine.startsWith('event: ')) {
               eventType = trimmedLine.slice(7);
-            } else if (trimmedLine.startsWith('data: ')) {
-              eventData = trimmedLine.slice(6);
+            } else if (line.startsWith('data: ')) {
+              // Don't trim the line here - preserve the original spacing from the API
+              eventData = line.slice(6); // Remove "data: " but keep original spacing
             }
           }
 
@@ -184,10 +185,10 @@ export class ChatbotApiClient {
   private *processBufferContent(buffer: string): Generator<StreamChunk, void, unknown> {
     const lines = buffer.split('\n');
     for (const line of lines) {
-      const trimmedLine = line.trim();
-      if (trimmedLine && trimmedLine.startsWith('data: ')) {
-        const content = trimmedLine.slice(6);
-        if (content && content !== '[DONE]') {
+      // Don't trim the line - preserve original spacing
+      if (line.startsWith('data: ')) {
+        const content = line.slice(6); // Remove "data: " but keep original spacing
+        if (content !== '[DONE]') { // Only skip the completion marker, not empty content
           yield { data: content, done: false };
         }
       }

@@ -158,13 +158,20 @@ export class MockChatbotApiClient {
 
 // Export a function to create the appropriate client based on environment
 export function createApiClient(apiUrl: string, apiKey: string) {
-  // In development, use mock API if the URL contains 'localhost' and port 8000
-  // This allows testing without running the real API
-  if (apiUrl.includes('localhost:8000') && import.meta.env.DEV) {
+  // Always use the real API client for localhost:8000 since the user has their API running
+  // Only use mock API for other development scenarios
+  if (apiUrl.includes('localhost:8000')) {
+    console.log('🚀 Using Real AI Chatbot API at', apiUrl);
+    // Import the real API client dynamically
+    return import('./api').then(module => new module.ChatbotApiClient(apiUrl, apiKey));
+  }
+  
+  // For other development URLs, still use mock API
+  if (import.meta.env.DEV) {
     console.log('🔧 Using Mock API for development testing');
     return new MockChatbotApiClient(apiUrl, apiKey);
   }
   
-  // Import the real API client dynamically to avoid bundling it unnecessarily
+  // Production: always use real API client
   return import('./api').then(module => new module.ChatbotApiClient(apiUrl, apiKey));
 } 

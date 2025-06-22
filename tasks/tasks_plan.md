@@ -194,10 +194,12 @@ This task plan implements the AI Chatbot Widget (MFE) as defined in the PRD and 
   - ✅ Connected retry functionality through Widget → WidgetContainer → MessageList → MessageBubble
   - ✅ Implemented canRetry flag for retryable vs non-retryable errors
   - ✅ Enhanced MessageBubble with improved status rendering and retry UI
-- [ ] **2.2.4** Test with real AI API
-  - Connect to deployed AI Chatbot API
-  - Test various message types, lengths, and edge cases
-  - Verify streaming performance and error handling
+- 🔄 **2.2.4** Test with real AI API
+  - ✅ Connected to local AI Chatbot API running on http://localhost:8000
+  - ✅ Updated API client selection logic to use real API with environment variables
+  - ✅ Configured environment variables for secure API key management
+  - 🔄 Testing various message types, lengths, and edge cases
+  - 🔄 Verifying streaming performance and error handling with real API
 
 **Acceptance Criteria:**
 - ✅ Messages send successfully to API with proper authentication

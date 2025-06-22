@@ -71,12 +71,17 @@ export function useChat({ config, onError }: UseChatOptions): UseChatReturn {
   useEffect(() => {
     const initializeApiClient = async () => {
       try {
-        if (config.baseUrl.includes('localhost:8000') && import.meta.env.DEV) {
-          console.log('🔧 Using Mock API for development testing');
-          apiClientRef.current = new MockChatbotApiClient(config.baseUrl, config.apiKey);
-        } else {
+        // Use real API if we have environment variables set (indicating user wants real API)
+        // Otherwise fall back to mock for development
+        const useRealApi = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_KEY;
+        
+        if (useRealApi || config.baseUrl.includes('localhost:8000')) {
+          console.log('🚀 Using Real AI Chatbot API at', config.baseUrl);
           const { ChatbotApiClient } = await import('../lib/api');
           apiClientRef.current = new ChatbotApiClient(config.baseUrl, config.apiKey);
+        } else {
+          console.log('🔧 Using Mock API for development testing');
+          apiClientRef.current = new MockChatbotApiClient(config.baseUrl, config.apiKey);
         }
       } catch (err) {
         console.error('Failed to initialize API client:', err);
@@ -259,8 +264,8 @@ export function useChat({ config, onError }: UseChatOptions): UseChatReturn {
             chunkData = chunkData.slice(6); // Remove "data: " prefix
           }
           
-          // Skip empty chunks
-          if (!chunkData.trim()) {
+          // Skip only completely empty chunks, but preserve spaces and whitespace content
+          if (chunkData.length === 0) {
             continue;
           }
 
