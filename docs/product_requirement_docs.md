@@ -30,6 +30,11 @@ The product's features are focused on providing a seamless user experience and d
 * **Value:** Improves usability and accessibility, especially on mobile devices where screen real estate is limited. It's ideal for longer, more complex conversations.
 * **High-Level Functionality:** A user clicks the "expand" icon. The widget uses CSS to animate its `position`, `width`, and `height` to fill the viewport. The icon changes to a "collapse" icon to allow the user to return to the standard widget view.
 
+### Feature 4: Widget Minimize & Bottom Bar
+* **Description:** The chat widget will include a minimize control that allows users to collapse the widget into a compact bottom bar. When minimized, a sleek bottom bar displays "AI Chatbot" text and can be clicked to restore the full widget interface.
+* **Value:** Provides an unobtrusive way for users to keep the chatbot accessible without taking up screen space, similar to popular chat applications like Facebook Messenger and LinkedIn Chat. Improves user experience by allowing easy access without visual clutter.
+* **High-Level Functionality:** A user clicks the "minimize" icon. The widget smoothly animates to collapse into a bottom bar positioned at the bottom-right of the viewport. The bottom bar shows "AI Chatbot" text and maintains the same styling theme. Clicking the bottom bar restores the widget to its previous state (normal or fullscreen). The minimize state persists during the session.
+
 ---
 
 ## 3. User Experience
@@ -51,7 +56,9 @@ The experience is designed for two distinct users: the developer embedding the w
     2.  She types "What is this project about?" and hits Enter. She sees a subtle "thinking" animation.
     3.  The assistant's reply appears and types itself out in real-time. The response contains a code block.
     4.  She clicks the "Fullscreen" icon to see the code block more clearly.
-    5.  She finishes her conversation and clicks the "close" button on the widget.
+    5.  She clicks the "Minimize" icon to collapse the widget into a bottom bar while she reads other content on the page.
+    6.  Later, she clicks the "AI Chatbot" bottom bar to restore the widget and continue her conversation.
+    7.  She finishes her conversation and clicks the "close" button on the widget.
 
 ### Developer Experience (DX) & API Design Principles
 * **Minimal Configuration:** The widget should work out-of-the-box with only the API URL and key.
@@ -90,8 +97,9 @@ The goal of the MVP is to deliver a functional, embeddable chat widget that fulf
 * **Feature A: Core Chat Interface:** A functional UI with a message list, text input area, and send button.
 * **Feature B: Streaming API Integration:** The widget must successfully call the external streaming API endpoint using the provided URL and key, and render the response token-by-token.
 * **Feature C: Functional Fullscreen Mode:** The UI toggle to enter and exit the fullscreen view must be implemented.
-* **Feature D: Embeddable Build Output:** The Vite build process must be configured to produce a single, portable JavaScript bundle.
-* **Feature E: Embedding Documentation:** A `README.md` that clearly explains how a developer can embed the widget on their site.
+* **Feature D: Widget Minimize & Bottom Bar:** The minimize functionality with bottom bar display and restore capability must be implemented.
+* **Feature E: Embeddable Build Output:** The Vite build process must be configured to produce a single, portable JavaScript bundle.
+* **Feature F: Embedding Documentation:** A `README.md` that clearly explains how a developer can embed the widget on their site.
 
 ### Future Enhancements (Post-MVP)
 * **Phase 2:**

@@ -17,8 +17,9 @@
 - ✅ **Task 1.1.4**: Configure build system for embeddable widget
 
 ### What We're Ready For Next
-- 🎯 **Phase 1.2**: Core UI Components (Next 4-5 hours)
+- 🎯 **Phase 1.2**: Core UI Components
 - 🚀 **Goal**: Create all chat interface components with mock data
+- 🆕 **NEW FEATURE**: Minimize functionality with bottom bar (like Facebook Messenger)
 
 ---
 
@@ -76,10 +77,10 @@ ai-chatbot-mfe/
 
 ## 🔄 Next Phase: Core UI Components (Phase 1.2)
 
-### **Immediate Tasks** (Next 4-5 hours)
+### **Immediate Tasks**
 1. **Task 1.2.1** - Create base UI components
    - Button component (primary, secondary variants)
-   - Icon component (send, expand, close icons)
+   - Icon component (send, expand, close, minimize icons)
    - LoadingSpinner component for async states
    - Avatar component for chat participants
 
@@ -87,27 +88,27 @@ ai-chatbot-mfe/
    - MessageBubble component (user/assistant styling)
    - MessageList component with auto-scroll
    - MessageInput component with send functionality
-   - ChatHeader component with title and controls
+   - ChatHeader component with title and controls (including minimize button)
 
 3. **Task 1.2.3** - Create layout components
-   - WidgetContainer with fullscreen toggle
+   - WidgetContainer with fullscreen toggle and minimize functionality
+   - MinimizeBar component for collapsed state with "AI Chatbot" text
    - Responsive design for mobile/desktop
-   - CSS animations for smooth transitions
+   - CSS animations for smooth transitions (expand, collapse, minimize, restore)
 
 4. **Task 1.2.4** - Add mock data and testing
    - Sample conversation data
    - Component isolation testing
-   - Responsive behavior verification
+   - Responsive behavior and state transition verification
 
 ---
 
 ## 📊 Development Progress
 
 ### **Phase 1.1 Metrics** ✅ COMPLETE
-- **Estimated Time**: 2-3 hours
-- **Actual Time**: ~1 hour  
-- **Efficiency**: 2x faster than estimated ✅
+- **Status**: Complete ✅
 - **Quality**: All acceptance criteria met ✅
+- **Blockers**: None ✅
 
 ### **Overall Project Status**
 - **Phase 1**: Foundation (Static UI) - 33% Complete (1/3 tasks)
@@ -116,10 +117,10 @@ ai-chatbot-mfe/
 - **Phase 4**: Enhancement & Polish - Not Started
 
 ### **MVP Progress**
-- **Total MVP Estimate**: 23-30 hours (Phases 1-3)
-- **Completed**: ~1 hour
-- **Remaining**: ~22-29 hours
-- **Current Velocity**: Ahead of schedule
+- **MVP Target**: Phases 1-3 Complete (includes minimize feature)
+- **Current Status**: Phase 1.1 Complete
+- **Next Milestone**: Phase 1.2 - Core UI Components
+- **Blockers**: None
 
 ---
 
@@ -140,10 +141,11 @@ ai-chatbot-mfe/
 - ✅ **Development Workflow**: Hot reload and fast iteration
 
 ### **Next Session Goals**
-- [ ] Complete all base UI components
+- [ ] Complete all base UI components (including minimize icon)
 - [ ] Implement chat interface with mock data
-- [ ] Add responsive design and fullscreen mode
-- [ ] Test component isolation and integration
+- [ ] Add responsive design, fullscreen mode, and minimize functionality
+- [ ] Create MinimizeBar component for collapsed state
+- [ ] Test component isolation and state transitions
 
 ---
 
@@ -193,11 +195,13 @@ ai-chatbot-mfe/
 ### **Functionality Requirements**
 - [ ] Mock chat conversation displays correctly
 - [ ] Fullscreen toggle works smoothly
+- [ ] Minimize functionality works with bottom bar display
+- [ ] Widget state transitions (normal ↔ fullscreen ↔ minimized) work correctly
 - [ ] Message input accepts and displays text
 - [ ] Loading states show appropriate feedback
 
 ### **Performance Targets**
-- [ ] Components render in <100ms
+- [ ] Components render smoothly
 - [ ] Smooth animations and transitions
 - [ ] No layout shifts during interactions
 - [ ] Efficient re-rendering with React patterns

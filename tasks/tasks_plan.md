@@ -21,9 +21,8 @@ This task plan implements the AI Chatbot Widget (MFE) as defined in the PRD and 
 
 ### 1.1 Project Structure & Environment Setup ✅ COMPLETE
 **Status:** 🟢 Complete  
-**Estimated Time:** 2-3 hours  
-**Actual Time:** ~1 hour  
-**Dependencies:** None
+**Dependencies:** None  
+**Blockers:** None
 
 **Tasks:**
 - ✅ **1.1.1** Initialize Vite + React + TypeScript project
@@ -57,51 +56,55 @@ This task plan implements the AI Chatbot Widget (MFE) as defined in the PRD and 
 
 ### 1.2 Core UI Components 🔄 NEXT
 **Status:** 🔴 Not Started  
-**Estimated Time:** 4-5 hours  
-**Dependencies:** 1.1 (Project Structure)
+**Dependencies:** 1.1 (Project Structure)  
+**Blockers:** None
 
 **Tasks:**
 - [ ] **1.2.1** Create base UI components
   - Button component with variants (primary, secondary)
-  - Icon component with common icons (send, expand, close, etc.)
+  - Icon component with common icons (send, expand, close, minimize, etc.)
   - LoadingSpinner component for async states
   - Avatar component for chat participants
 - [ ] **1.2.2** Implement chat interface components
   - MessageBubble component for user/assistant messages
   - MessageList component with scrolling and auto-scroll
   - MessageInput component with send button
-  - ChatHeader component with title and controls
+  - ChatHeader component with title and controls (including minimize button)
 - [ ] **1.2.3** Create layout components
-  - WidgetContainer component with fullscreen toggle
+  - WidgetContainer component with fullscreen toggle and minimize functionality
+  - MinimizeBar component for collapsed state with "AI Chatbot" text
   - Responsive design for mobile and desktop
-  - CSS animations for smooth transitions
+  - CSS animations for smooth transitions (expand, collapse, minimize, restore)
 - [ ] **1.2.4** Add mock data and test all components
   - Create sample conversation data
   - Test components in isolation
-  - Verify responsive behavior
+  - Verify responsive behavior and state transitions
 
 **Acceptance Criteria:**
 - [ ] All UI components render correctly with mock data
 - [ ] Components are responsive and work on mobile/desktop
 - [ ] Fullscreen toggle works smoothly
+- [ ] Minimize functionality works with smooth transitions to/from bottom bar
+- [ ] Bottom bar displays "AI Chatbot" text and restores widget when clicked
 - [ ] Chat interface looks professional and modern
 
 ---
 
 ### 1.3 Static UI Integration & Polish 🔄 PENDING
 **Status:** 🔴 Not Started  
-**Estimated Time:** 3-4 hours  
-**Dependencies:** 1.2 (Core UI Components)
+**Dependencies:** 1.2 (Core UI Components)  
+**Blockers:** None
 
 **Tasks:**
 - [ ] **1.3.1** Integrate components into main App
   - Compose chat interface from individual components
   - Implement state management for UI interactions
   - Add keyboard navigation and accessibility
-- [ ] **1.3.2** Implement fullscreen mode
-  - CSS transitions for expand/collapse
+- [ ] **1.3.2** Implement fullscreen and minimize modes
+  - CSS transitions for expand/collapse/minimize/restore
   - Handle escape key and outside clicks
   - Maintain scroll position during transitions
+  - Implement widget state management (normal/fullscreen/minimized)
 - [ ] **1.3.3** Add loading and error states
   - Loading spinners for various states
   - Error messages with retry options
@@ -114,6 +117,8 @@ This task plan implements the AI Chatbot Widget (MFE) as defined in the PRD and 
 **Acceptance Criteria:**
 - [ ] Complete chat interface works with static data
 - [ ] Fullscreen mode transitions smoothly
+- [ ] Minimize mode works with bottom bar functionality
+- [ ] Widget state transitions (normal ↔ fullscreen ↔ minimized) work correctly
 - [ ] All states (loading, error, empty) are handled
 - [ ] UI feels polished and professional
 
@@ -123,8 +128,8 @@ This task plan implements the AI Chatbot Widget (MFE) as defined in the PRD and 
 
 ### 2.1 Chat Hook & State Management 🔄 PENDING
 **Status:** 🔴 Not Started  
-**Estimated Time:** 4-5 hours  
-**Dependencies:** 1.3 (Static UI Complete)
+**Dependencies:** 1.3 (Static UI Complete)  
+**Blockers:** None
 
 **Tasks:**
 - [ ] **2.1.1** Create useChat hook with streaming support
@@ -136,10 +141,11 @@ This task plan implements the AI Chatbot Widget (MFE) as defined in the PRD and 
   - Read configuration from data-* attributes
   - Validate required configuration
   - Provide defaults for optional settings
-- [ ] **2.1.3** Create useFullscreen hook
-  - Manage fullscreen state
-  - Handle keyboard shortcuts
-  - Persist user preference
+- [ ] **2.1.3** Create useWidgetState hook
+  - Manage widget state (normal/fullscreen/minimized)
+  - Handle keyboard shortcuts (escape to exit fullscreen)
+  - Persist user preferences for widget state
+  - Smooth state transitions with proper cleanup
 - [ ] **2.1.4** Integrate hooks with UI components
   - Replace mock data with real state
   - Connect user interactions to state changes
@@ -148,15 +154,16 @@ This task plan implements the AI Chatbot Widget (MFE) as defined in the PRD and 
 **Acceptance Criteria:**
 - [ ] Chat state management works correctly
 - [ ] Configuration is read from embedding div
-- [ ] Fullscreen state persists across interactions
+- [ ] Widget state (normal/fullscreen/minimized) persists across interactions
+- [ ] State transitions are smooth and handle edge cases
 - [ ] Error boundaries prevent crashes
 
 ---
 
 ### 2.2 API Integration & Streaming 🔄 PENDING
 **Status:** 🔴 Not Started  
-**Estimated Time:** 5-6 hours  
-**Dependencies:** 2.1 (Chat Hook)
+**Dependencies:** 2.1 (Chat Hook)  
+**Blockers:** None
 
 **Tasks:**
 - [ ] **2.2.1** Integrate ChatbotApiClient with useChat hook
@@ -188,8 +195,8 @@ This task plan implements the AI Chatbot Widget (MFE) as defined in the PRD and 
 
 ### 3.1 Widget Embedding System 🔄 PENDING
 **Status:** 🔴 Not Started  
-**Estimated Time:** 3-4 hours  
-**Dependencies:** 2.2 (API Integration)
+**Dependencies:** 2.2 (API Integration)  
+**Blockers:** None
 
 **Tasks:**
 - [ ] **3.1.1** Create embedding entry point
@@ -220,8 +227,8 @@ This task plan implements the AI Chatbot Widget (MFE) as defined in the PRD and 
 
 ### 3.2 Style Isolation & Compatibility 🔄 PENDING
 **Status:** 🔴 Not Started  
-**Estimated Time:** 2-3 hours  
-**Dependencies:** 3.1 (Embedding System)
+**Dependencies:** 3.1 (Embedding System)  
+**Blockers:** None
 
 **Tasks:**
 - [ ] **3.2.1** Implement CSS prefix strategy
@@ -253,8 +260,8 @@ This task plan implements the AI Chatbot Widget (MFE) as defined in the PRD and 
 
 ### 4.1 Advanced Features 🔄 PENDING
 **Status:** 🔴 Not Started  
-**Estimated Time:** 6-8 hours  
-**Dependencies:** Phase 3 Complete
+**Dependencies:** Phase 3 Complete  
+**Blockers:** None
 
 **Tasks:**
 - [ ] **4.1.1** Conversation history persistence
@@ -284,8 +291,8 @@ This task plan implements the AI Chatbot Widget (MFE) as defined in the PRD and 
 
 ### 4.2 Analytics & Monitoring 🔄 PENDING
 **Status:** 🔴 Not Started  
-**Estimated Time:** 4-5 hours  
-**Dependencies:** 4.1 (Advanced Features)
+**Dependencies:** 4.1 (Advanced Features)  
+**Blockers:** None
 
 **Tasks:**
 - [ ] **4.2.1** Add usage analytics
@@ -317,17 +324,15 @@ This task plan implements the AI Chatbot Widget (MFE) as defined in the PRD and 
 
 ### Overall Progress: 25% Complete (Phase 1.1 Complete)
 
-| Phase | Status | Progress | Priority | Est. Time | Actual Time |
-|-------|--------|----------|----------|-----------|-------------|
-| Phase 1: Foundation (Static UI) | 🔄 In Progress | 1/3 | Critical | 9-12h | ~1h |
-| Phase 2: Core Features (API Integration) | 🔴 Not Started | 0/2 | High | 9-11h | - |
-| Phase 3: Integration & Embedding | 🔴 Not Started | 0/2 | Medium | 5-7h | - |
-| Phase 4: Enhancement & Polish | 🔴 Not Started | 0/2 | Low | 10-13h | - |
+| Phase | Status | Progress | Priority | Dependencies |
+|-------|--------|----------|----------|--------------|
+| Phase 1: Foundation (Static UI) | 🔄 In Progress | 1/3 | Critical | None |
+| Phase 2: Core Features (API Integration) | 🔴 Not Started | 0/2 | High | Phase 1 Complete |
+| Phase 3: Integration & Embedding | 🔴 Not Started | 0/2 | Medium | Phase 2 Complete |
+| Phase 4: Enhancement & Polish | 🔴 Not Started | 0/2 | Low | Phase 3 Complete |
 
-**Total Estimated Time:** 33-43 hours
-**MVP Target:** 23-30 hours (Phases 1-3)
-**Completed:** ~1 hour
-**Remaining for MVP:** ~22-29 hours
+**MVP Target:** Phases 1-3 Complete  
+**Current Status:** Phase 1.1 Complete
 
 ---
 
@@ -343,6 +348,7 @@ This task plan implements the AI Chatbot Widget (MFE) as defined in the PRD and 
 - [ ] All UI components working with mock data
 - [ ] Responsive design tested on mobile and desktop
 - [ ] Fullscreen mode implemented and tested
+- [ ] Minimize mode with bottom bar implemented and tested
 
 ### Risk Mitigation
 - ✅ **Build System**: Vite library mode working correctly
@@ -369,7 +375,8 @@ This task plan implements the AI Chatbot Widget (MFE) as defined in the PRD and 
 
 ### Next Phase Focus
 - **UI Development**: Create all chat interface components
-- **Static Functionality**: Implement fullscreen mode and interactions
+- **Static Functionality**: Implement fullscreen and minimize modes with smooth transitions
+- **Widget State Management**: Handle normal/fullscreen/minimized states
 - **Mock Data**: Test all components with realistic data
 - **Responsive Design**: Ensure mobile and desktop compatibility
 
