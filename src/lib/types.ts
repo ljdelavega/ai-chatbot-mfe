@@ -11,13 +11,25 @@ import type {
   ApiError as BaseApiError
 } from './api-types';
 
+// Enhanced message status types for better status management
+export type MessageStatus = 
+  | 'pending'     // Message is being prepared to send
+  | 'sending'     // Message is being sent to API
+  | 'streaming'   // Assistant message is being streamed
+  | 'complete'    // Message completed successfully
+  | 'error'       // Message failed with error
+  | 'retrying';   // Message is being retried
+
 // Extended message interface for widget use (adds UI-specific fields)
 export interface Message extends Omit<ApiMessage, 'role'> {
   id: string;
   role: MessageRole;
   content: string;
   timestamp: Date;
-  status?: 'loading' | 'error' | 'complete' | 'streaming';
+  status?: MessageStatus;
+  error?: string;        // Error message for failed messages
+  retryCount?: number;   // Number of retry attempts
+  canRetry?: boolean;    // Whether this message can be retried
 }
 
 // Re-export API types for compatibility
@@ -43,4 +55,11 @@ export interface ApiError extends BaseApiError {
 // Widget-specific streaming types
 export interface StreamChunk extends ApiStreamChunk {
   // Additional widget-specific streaming properties can be added here
+}
+
+// Message retry configuration
+export interface RetryConfig {
+  maxRetries: number;
+  retryDelay: number;
+  retryableErrors: string[];
 } 

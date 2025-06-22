@@ -10,6 +10,7 @@ export interface MessageListProps {
   messages: Message[];
   isLoading?: boolean;
   streamingMessageId?: string;
+  onRetryMessage?: (messageId: string) => void;
   className?: string;
   autoScroll?: boolean;
   emptyStateType?: EmptyStateType;
@@ -29,6 +30,7 @@ const MessageList: React.FC<MessageListProps> = ({
   messages,
   isLoading = false,
   streamingMessageId,
+  onRetryMessage,
   className = '',
   autoScroll = true,
   emptyStateType = 'welcome',
@@ -113,6 +115,7 @@ const MessageList: React.FC<MessageListProps> = ({
               key={message.id}
               message={message}
               isStreaming={streamingMessageId === message.id}
+              onRetry={onRetryMessage}
             />
           ))}
           

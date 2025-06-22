@@ -10,6 +10,7 @@ export type WidgetState = 'normal' | 'fullscreen' | 'minimized';
 export interface WidgetContainerProps {
   messages: Message[];
   onSendMessage: (message: string) => void;
+  onRetryMessage?: (messageId: string) => void;
   isLoading?: boolean;
   streamingMessageId?: string;
   title?: string;
@@ -39,6 +40,7 @@ export interface WidgetContainerProps {
 const WidgetContainer: React.FC<WidgetContainerProps> = ({
   messages,
   onSendMessage,
+  onRetryMessage,
   isLoading = false,
   streamingMessageId,
   title = 'AI Chatbot',
@@ -364,6 +366,7 @@ const WidgetContainer: React.FC<WidgetContainerProps> = ({
             messages={messages}
             isLoading={isLoading}
             streamingMessageId={streamingMessageId}
+            onRetryMessage={onRetryMessage}
             className="h-full"
             errorState={errorState}
             networkStatus={networkStatus}

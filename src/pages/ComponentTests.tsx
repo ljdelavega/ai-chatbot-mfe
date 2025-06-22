@@ -80,7 +80,7 @@ function ComponentTests() {
       role: 'user',
       content: 'That sounds great! What features does it have?',
       timestamp: new Date(Date.now() - 3000),
-      status: 'loading'
+      status: 'sending'
     },
     {
       id: '5',

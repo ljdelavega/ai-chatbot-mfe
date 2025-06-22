@@ -183,10 +183,17 @@ This task plan implements the AI Chatbot Widget (MFE) as defined in the PRD and 
   - ✅ Performance optimizations: chunk batching, reduced re-renders, efficient UI updates
   - ✅ Enhanced API client with better SSE parsing and error handling
   - ✅ Real-time UI updates with smooth streaming experience
-- [ ] **2.2.3** Add message status management
-  - Show typing indicators during streaming
-  - Display error states for failed messages with retry options
-  - Implement message retry functionality
+  - ✅ Fixed streaming duplication issue for development mock API
+- ✅ **2.2.3** Add message status management
+  - ✅ Enhanced message status types (pending, sending, streaming, complete, error, retrying)
+  - ✅ Implemented typing indicators with animated dots during streaming responses
+  - ✅ Added message retry functionality for failed messages with retry buttons
+  - ✅ Enhanced visual status indicators with color-coded states and icons
+  - ✅ Integrated retry logic into useChat hook with retry count tracking
+  - ✅ Added error state styling and user-friendly error messages
+  - ✅ Connected retry functionality through Widget → WidgetContainer → MessageList → MessageBubble
+  - ✅ Implemented canRetry flag for retryable vs non-retryable errors
+  - ✅ Enhanced MessageBubble with improved status rendering and retry UI
 - [ ] **2.2.4** Test with real AI API
   - Connect to deployed AI Chatbot API
   - Test various message types, lengths, and edge cases
@@ -197,7 +204,8 @@ This task plan implements the AI Chatbot Widget (MFE) as defined in the PRD and 
 - ✅ Streaming responses render in real-time with enhanced performance
 - ✅ Error states are handled gracefully with automatic retry and recovery
 - ✅ Performance remains smooth during streaming with optimized chunk processing
-- [ ] Message status indicators work correctly
+- ✅ Message status indicators work correctly with enhanced visual feedback
+- ✅ Message retry functionality works for failed messages
 - [ ] Real AI API integration tested and verified
 
 ---

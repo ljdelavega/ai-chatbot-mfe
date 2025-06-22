@@ -40,8 +40,8 @@ function IntegratedWidget() {
     error: chatError,
     streamingMessageId,
     sendMessage,
+    retryMessage,
     retry,
-
     clearError
   } = useChat({
     config: config || mockConfig, // Fallback to mock config
@@ -252,6 +252,7 @@ function IntegratedWidget() {
          onClose={handleClose}
          messages={messages}
          onSendMessage={handleSendMessage}
+         onRetryMessage={retryMessage}
          isLoading={isLoading}
          streamingMessageId={streamingMessageId || undefined}
          hasNewMessages={false} // We'll implement this later

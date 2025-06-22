@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import type { Message, ChatRequest, WidgetConfig } from '../lib/types';
+import type { Message, ChatRequest, WidgetConfig, RetryConfig } from '../lib/types';
 import { ChatbotApiClient } from '../lib/api';
 import { MockChatbotApiClient } from '../lib/mockApi';
 
@@ -14,6 +14,7 @@ export interface UseChatReturn {
   error: string | null;
   streamingMessageId: string | null;
   sendMessage: (content: string) => Promise<void>;
+  retryMessage: (messageId: string) => Promise<void>;
   retry: () => Promise<void>;
   clearMessages: () => void;
   clearError: () => void;
@@ -27,11 +28,17 @@ interface StreamingConfig {
   connectionTimeout: number; // Connection timeout (ms)
 }
 
-const DEFAULT_STREAMING_CONFIG: StreamingConfig = {
-  chunkDelay: 50, // 50ms for smooth but not overwhelming updates
+// Default retry configuration
+const DEFAULT_RETRY_CONFIG: RetryConfig = {
   maxRetries: 3,
   retryDelay: 1000,
-  connectionTimeout: 30000, // 30 seconds
+  retryableErrors: [
+    'HTTP 429', // Rate limit
+    'HTTP 5', // Server errors
+    'timeout',
+    'NetworkError',
+    'Failed to fetch'
+  ]
 };
 
 export function useChat({ config, onError }: UseChatOptions): UseChatReturn {
@@ -40,63 +47,71 @@ export function useChat({ config, onError }: UseChatOptions): UseChatReturn {
   const [error, setError] = useState<string | null>(null);
   const [streamingMessageId, setStreamingMessageId] = useState<string | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
-  
-  // Enhanced refs for streaming management
+
+  // Refs for managing streaming and cleanup
+  const apiClientRef = useRef<ChatbotApiClient | MockChatbotApiClient | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const lastUserMessageRef = useRef<string>('');
-  const streamingConfigRef = useRef<StreamingConfig>(DEFAULT_STREAMING_CONFIG);
   const retryCountRef = useRef<number>(0);
   const streamTimeoutRef = useRef<number | null>(null);
   
   // Performance optimization: batch chunk updates
   const pendingChunksRef = useRef<string[]>([]);
   const chunkProcessingTimeoutRef = useRef<number | null>(null);
-  
-  // Create appropriate API client based on environment
-  const createApiClient = useCallback(() => {
-    // Use mock API for development testing when using localhost:8000
-    if (config.baseUrl.includes('localhost:8000') && import.meta.env.DEV) {
-      console.log('🔧 Using Mock API for development testing');
-      return new MockChatbotApiClient(config.baseUrl, config.apiKey);
-    }
-    return new ChatbotApiClient(config.baseUrl, config.apiKey);
+
+  // Enhanced streaming configuration
+  const streamingConfigRef = useRef<StreamingConfig>({
+    chunkDelay: 50, // 50ms delay for smooth streaming
+    maxRetries: 3,
+    retryDelay: 1000,
+    connectionTimeout: 30000 // 30 seconds
+  });
+
+  // Initialize API client
+  useEffect(() => {
+    const initializeApiClient = async () => {
+      try {
+        if (config.baseUrl.includes('localhost:8000') && import.meta.env.DEV) {
+          console.log('🔧 Using Mock API for development testing');
+          apiClientRef.current = new MockChatbotApiClient(config.baseUrl, config.apiKey);
+        } else {
+          const { ChatbotApiClient } = await import('../lib/api');
+          apiClientRef.current = new ChatbotApiClient(config.baseUrl, config.apiKey);
+        }
+      } catch (err) {
+        console.error('Failed to initialize API client:', err);
+        setError('Failed to initialize chat service');
+      }
+    };
+
+    initializeApiClient();
   }, [config.baseUrl, config.apiKey]);
 
-  const apiClientRef = useRef(createApiClient());
-
-  // Update API client when config changes
+  // Cleanup on unmount
   useEffect(() => {
-    const newClient = createApiClient();
-    if (apiClientRef.current.baseUrl !== newClient.baseUrl || 
-        apiClientRef.current.key !== newClient.key) {
-      apiClientRef.current = newClient;
-    }
-  }, [createApiClient]);
-
-  const clearError = useCallback(() => {
-    setError(null);
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      if (streamTimeoutRef.current) {
+        clearTimeout(streamTimeoutRef.current);
+      }
+      if (chunkProcessingTimeoutRef.current) {
+        clearTimeout(chunkProcessingTimeoutRef.current);
+      }
+    };
   }, []);
 
   const clearMessages = useCallback(() => {
     setMessages([]);
     setError(null);
+    setStreamingMessageId(null);
     setIsInitialized(false);
   }, []);
 
-  // Initialize with welcome message
-  useEffect(() => {
-    if (!isInitialized && messages.length === 0) {
-      const welcomeMessage: Message = {
-        id: `welcome-${Date.now()}`,
-        role: 'assistant',
-        content: 'Hello! I\'m your AI assistant. How can I help you today?',
-        timestamp: new Date(),
-        status: 'complete'
-      };
-      setMessages([welcomeMessage]);
-      setIsInitialized(true);
-    }
-  }, [isInitialized, messages.length]);
+  const clearError = useCallback(() => {
+    setError(null);
+  }, []);
 
   const generateMessageId = useCallback(() => {
     return `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -119,6 +134,13 @@ export function useChat({ config, onError }: UseChatOptions): UseChatReturn {
     ));
   }, []);
 
+  // Check if error is retryable
+  const isRetryableError = useCallback((error: string): boolean => {
+    return DEFAULT_RETRY_CONFIG.retryableErrors.some(retryableError => 
+      error.toLowerCase().includes(retryableError.toLowerCase())
+    );
+  }, []);
+
   // Enhanced chunk processing with batching for better performance
   const processPendingChunks = useCallback((assistantMessageId: string) => {
     if (pendingChunksRef.current.length === 0) return;
@@ -135,7 +157,7 @@ export function useChat({ config, onError }: UseChatOptions): UseChatReturn {
         return { 
           ...msg, 
           content: newContent,
-          status: 'streaming' as const,
+          status: 'streaming',
           timestamp: new Date()
         };
       }
@@ -186,7 +208,7 @@ export function useChat({ config, onError }: UseChatOptions): UseChatReturn {
         throw new Error('Connection timeout: The request took too long to complete');
       }, streamingConfigRef.current.connectionTimeout);
 
-      const stream = apiClientRef.current.chatStream(chatRequest);
+      const stream = apiClientRef.current!.chatStream(chatRequest);
       let hasReceivedData = false;
 
       // Process stream with enhanced error handling
@@ -204,7 +226,8 @@ export function useChat({ config, onError }: UseChatOptions): UseChatReturn {
         if (abortControllerRef.current?.signal.aborted) {
           updateMessage(assistantMessageId, { 
             status: 'error',
-            content: 'Request was cancelled.'
+            content: 'Request was cancelled.',
+            error: 'Request was cancelled'
           });
           setStreamingMessageId(null);
           break;
@@ -251,7 +274,7 @@ export function useChat({ config, onError }: UseChatOptions): UseChatReturn {
                 return { 
                   ...msg, 
                   content: newContent,
-                  status: 'streaming' as const,
+                  status: 'streaming',
                   timestamp: new Date()
                 };
               }
@@ -316,62 +339,46 @@ export function useChat({ config, onError }: UseChatOptions): UseChatReturn {
         console.log(`Retrying stream (attempt ${retryAttempt + 1}/${streamingConfigRef.current.maxRetries})`);
         retryCountRef.current = retryAttempt + 1;
         
-        // Update message to show retry status
+        // Update message status to show retry
         updateMessage(assistantMessageId, { 
-          status: 'loading',
-          content: `Connection interrupted. Retrying... (${retryAttempt + 1}/${streamingConfigRef.current.maxRetries})`
+          status: 'retrying',
+          retryCount: retryAttempt + 1,
+          error: userFriendlyMessage
         });
         
-        // Wait before retrying
+        // Wait before retrying with exponential backoff
         await new Promise(resolve => 
-          setTimeout(resolve, streamingConfigRef.current.retryDelay * (retryAttempt + 1))
+          setTimeout(resolve, streamingConfigRef.current.retryDelay * Math.pow(2, retryAttempt))
         );
         
         // Retry the request
         return handleStreamingResponse(assistantMessageId, currentMessages, retryAttempt + 1);
       }
       
-      // Update assistant message to show error
+      // Update message with error state
       updateMessage(assistantMessageId, { 
         status: 'error',
-        content: userFriendlyMessage
+        error: userFriendlyMessage,
+        canRetry: isRetryableError(errorMessage),
+        retryCount: retryAttempt
       });
       
       setStreamingMessageId(null);
-      setError(errorMessage);
-      onError?.(err instanceof Error ? err : new Error(errorMessage));
-    } finally {
-      setIsLoading(false);
+      setError(userFriendlyMessage);
       
-      // Clear all timeouts
-      if (streamTimeoutRef.current) {
-        clearTimeout(streamTimeoutRef.current);
-        streamTimeoutRef.current = null;
+      if (onError) {
+        onError(err instanceof Error ? err : new Error(errorMessage));
       }
-      if (chunkProcessingTimeoutRef.current) {
-        clearTimeout(chunkProcessingTimeoutRef.current);
-        chunkProcessingTimeoutRef.current = null;
-      }
-      
-      // Clear pending chunks
-      pendingChunksRef.current = [];
     }
-  }, [updateMessage, onError, processPendingChunks]);
+  }, [config, updateMessage, processPendingChunks, onError, isRetryableError]);
 
   const sendMessage = useCallback(async (content: string) => {
-    if (!content.trim() || isLoading) return;
+    if (!content.trim() || isLoading || !apiClientRef.current) return;
 
     // Cancel any ongoing request
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
-
-    // Clear any pending chunk processing
-    if (chunkProcessingTimeoutRef.current) {
-      clearTimeout(chunkProcessingTimeoutRef.current);
-      chunkProcessingTimeoutRef.current = null;
-    }
-    pendingChunksRef.current = [];
 
     // Create new abort controller
     abortControllerRef.current = new AbortController();
@@ -379,51 +386,90 @@ export function useChat({ config, onError }: UseChatOptions): UseChatReturn {
     // Store for retry functionality
     lastUserMessageRef.current = content.trim();
 
-    // Clear any previous errors and reset retry count
+    // Clear any previous errors
     setError(null);
-    retryCountRef.current = 0;
     setIsLoading(true);
 
     try {
-      // Add user message
+      // Add user message with pending status
       const userMessage = {
         role: 'user' as const,
         content: content.trim(),
-        status: 'complete' as const
+        status: 'sending' as const
       };
       
-      addMessage(userMessage);
+      const userMessageId = addMessage(userMessage);
 
-      // Add assistant message with loading state
+      // Update user message to complete
+      updateMessage(userMessageId, { status: 'complete' });
+
+      // Add assistant message with streaming state
       const assistantMessage = {
         role: 'assistant' as const,
         content: '',
-        status: 'loading' as const
+        status: 'streaming' as const
       };
       
       const assistantMessageId = addMessage(assistantMessage);
-
+      
       // Get current messages for API call
-      setMessages(prev => {
-        const updatedMessages = [...prev];
-        
-        // Start streaming response with the updated message list
-        // Use requestAnimationFrame for better performance
-        requestAnimationFrame(() => {
-          handleStreamingResponse(assistantMessageId, updatedMessages);
-        });
-        
-        return updatedMessages;
-      });
+      const currentMessages = [...messages, {
+        id: userMessageId,
+        role: 'user' as const,
+        content: content.trim(),
+        timestamp: new Date(),
+        status: 'complete' as const
+      }];
+
+      // Handle streaming response
+      await handleStreamingResponse(assistantMessageId, currentMessages);
 
     } catch (err) {
+      console.error('Send message error:', err);
       const errorMessage = err instanceof Error ? err.message : 'Failed to send message';
       setError(errorMessage);
-      onError?.(err instanceof Error ? err : new Error(errorMessage));
+      
+      if (onError) {
+        onError(err instanceof Error ? err : new Error(errorMessage));
+      }
+    } finally {
       setIsLoading(false);
     }
-    // Note: setIsLoading(false) is called in handleStreamingResponse finally block
-  }, [isLoading, addMessage, handleStreamingResponse, onError]);
+  }, [isLoading, messages, addMessage, updateMessage, handleStreamingResponse, onError]);
+
+  const retryMessage = useCallback(async (messageId: string) => {
+    const message = messages.find(msg => msg.id === messageId);
+    if (!message || !message.canRetry) return;
+
+    console.log('🔄 Retrying message:', messageId);
+    
+    // Update message status to retrying
+    updateMessage(messageId, { 
+      status: 'retrying',
+      retryCount: (message.retryCount || 0) + 1
+    });
+
+    // Find the corresponding user message to retry
+    const messageIndex = messages.findIndex(msg => msg.id === messageId);
+    if (messageIndex > 0) {
+      const userMessage = messages[messageIndex - 1];
+      if (userMessage.role === 'user') {
+        // Get messages up to the user message for context
+        const contextMessages = messages.slice(0, messageIndex);
+        
+        try {
+          await handleStreamingResponse(messageId, contextMessages);
+        } catch (err) {
+          console.error('Retry failed:', err);
+          updateMessage(messageId, { 
+            status: 'error',
+            error: 'Retry failed. Please try again.',
+            canRetry: true
+          });
+        }
+      }
+    }
+  }, [messages, updateMessage, handleStreamingResponse]);
 
   const retry = useCallback(async () => {
     if (lastUserMessageRef.current && !isLoading) {
@@ -432,50 +478,45 @@ export function useChat({ config, onError }: UseChatOptions): UseChatReturn {
     }
   }, [sendMessage, isLoading]);
 
-  // Enhanced cleanup on unmount
-  const cleanup = useCallback(() => {
-    console.log('🧹 Cleaning up chat resources');
-    
-    // Abort any ongoing requests
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
-    
-    // Clear all timeouts
-    if (streamTimeoutRef.current) {
-      clearTimeout(streamTimeoutRef.current);
-      streamTimeoutRef.current = null;
-    }
-    
-    if (chunkProcessingTimeoutRef.current) {
-      clearTimeout(chunkProcessingTimeoutRef.current);
-      chunkProcessingTimeoutRef.current = null;
-    }
-    
-    // Clear pending chunks
-    pendingChunksRef.current = [];
-    
-    // Reset streaming state
-    setStreamingMessageId(null);
-    setIsLoading(false);
+  // Cleanup function
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      if (streamTimeoutRef.current) {
+        clearTimeout(streamTimeoutRef.current);
+      }
+      if (chunkProcessingTimeoutRef.current) {
+        clearTimeout(chunkProcessingTimeoutRef.current);
+      }
+    };
   }, []);
 
-  // Cleanup effect for component unmount
+  // Initialize with welcome message
   useEffect(() => {
-    return cleanup;
-  }, [cleanup]);
+    if (!isInitialized && messages.length === 0) {
+      const welcomeMessage: Message = {
+        id: `welcome-${Date.now()}`,
+        role: 'assistant',
+        content: 'Hello! I\'m your AI assistant. How can I help you today?',
+        timestamp: new Date(),
+        status: 'complete'
+      };
+      setMessages([welcomeMessage]);
+      setIsInitialized(true);
+    }
+  }, [isInitialized, messages.length]);
 
-  // Return enhanced hook interface
   return {
     messages,
     isLoading,
     error,
     streamingMessageId,
     sendMessage,
+    retryMessage,
     retry,
     clearMessages,
-    clearError,
-    // Internal cleanup method for advanced usage
-    _cleanup: cleanup
-  } as UseChatReturn & { _cleanup: () => void };
+    clearError
+  };
 } 

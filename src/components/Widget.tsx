@@ -7,6 +7,7 @@ import type { Message } from '../lib/types';
 export interface WidgetProps {
   messages: Message[];
   onSendMessage: (message: string) => void;
+  onRetryMessage?: (messageId: string) => void;
   isLoading?: boolean;
   streamingMessageId?: string;
   title?: string;
@@ -37,6 +38,7 @@ export interface WidgetProps {
 const Widget: React.FC<WidgetProps> = ({
   messages,
   onSendMessage,
+  onRetryMessage,
   isLoading = false,
   streamingMessageId,
   title = 'AI Chatbot',
@@ -113,6 +115,7 @@ const Widget: React.FC<WidgetProps> = ({
         <WidgetContainer
           messages={messages}
           onSendMessage={onSendMessage}
+          onRetryMessage={onRetryMessage}
           isLoading={isLoading}
           streamingMessageId={streamingMessageId}
           title={title}
