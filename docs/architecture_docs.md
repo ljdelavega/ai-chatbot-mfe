@@ -1,169 +1,170 @@
-# System Architecture & Technical Specifications: [Project Name]
+# System Architecture & Technical Specifications: Embeddable AI Chatbot Widget (MFE)
 
-**Author:** [Your Name]
-**Date:** 2025-01-01
+**Author:** Lester Dela Vega
+**Date:** 2025-06-21
 
----
+-----
 
-## 1. Architectural Drivers & Decisions (The "Why")
+## 1\. Architectural Drivers & Decisions (The "Why")
 
-This section covers the "why" behind the project, outlining the business goals, constraints, and major design choices that shape the system.
+This section covers the technical drivers and high-level architectural decisions that align with the product's goals.
 
 ### 1.1. Overview & Business Goals
-A brief, high-level summary of the system's purpose and the goals it aims to achieve.
-* *e.g., To create a simple website using Next.js and Tailwind CSS.*
+
+The primary technical goal is to engineer a **portable, framework-agnostic, client-side Micro-Frontend (MFE)**. This application will serve as the user interface for the headless AI Chat API. It must be self-contained, performant, and designed for dead-simple integration into any host website, thereby providing a scalable solution for adding a chat UI without requiring frontend development from the consumer.
 
 ### 1.2. Key Architectural Drivers
+
 #### Constraints
-* **Technical:** Must use open-source technologies and integrate with a headless CMS or a local markdown system.
-* **Budgetary:** Monthly hosting costs must remain under $20.
-* **Time:** A minimum viable product (MVP) must be deployable within 3 months.
+
+  * **Technical:** The application must be built using a modern JavaScript toolchain (Vite, React, TypeScript). It must compile into a single JavaScript bundle to facilitate easy embedding. The application must be completely stateless, relying on the external API for all business logic.
+  * **Budgetary:** The compiled artifact must be deployable on free-tier static hosting platforms or CDNs.
+  * **Integration:** Must be able to run on any HTML page, regardless of the host website's framework (or lack thereof).
 
 #### Non-Functional Requirements (NFRs)
-The qualities the system must possess.
-* **Performance:** Average API response time must be <200ms. Page loads should be interactive in <2 seconds.
-* **Scalability:** The system should handle 100 concurrent users, with a clear path to scale to 1,000.
-* **Availability:** Target 99.9% uptime.
-* **Security:** Authentication must use modern, secure practices (e.g., OAuth2 or JWTs).
+
+  * **Performance:** The initial gzipped bundle size should be under 75kB to ensure a fast load time. The UI must remain responsive and avoid jank, especially while rendering streaming text responses.
+  * **Portability:** The widget must not depend on any global variables or libraries (like jQuery) provided by the host page. It must be entirely self-sufficient.
+  * **Security:** The widget must not store any long-term secrets. The API key will be received at runtime, held in memory for the duration of the session, and never persisted. All communication with the backend API must be over HTTPS.
+  * **Style Encapsulation:** The widget's CSS must not conflict with the host page's styles.
 
 ### 1.3. Core Architectural Decisions
-* **Architectural Pattern:** A monolithic approach using Next.js, where the frontend client and backend API service are part of the same application. This simplifies development and deployment for a personal project.
-* **Data Storage:** A combination of a PostgreSQL database for structured relational data (users, comments) and the local filesystem for markdown-based content (blog posts, project descriptions).
-* **Rationale:** This hybrid approach leverages a relational database for transactional integrity while using a simple, version-controlled file system for content.
 
----
+  * **Architectural Pattern:** **Micro-Frontend (MFE).** The application is designed as a "guest" that is dynamically loaded and mounted into a "host" webpage. This pattern ensures complete decoupling.
+  * **Technology Stack:** **Vite + React + TypeScript**. This stack was chosen for Vite's optimized build tooling that easily produces small bundles, React's powerful ecosystem for building interactive UIs, and TypeScript's robust type safety.
+  * **State Management:** For the MVP, state will be managed locally within React components using built-in hooks (`useState`, `useReducer`). The core chat logic will be encapsulated in a custom hook leveraging the Vercel `ai/react` library for efficient handling of streaming state.
+  * **Integration Method:** **Dynamic Script Loading with `data-*` attribute configuration.** The host page provides a `<div>` mount point and a `<script>` tag. The script loads the MFE bundle, which then reads its configuration (API URL, key) from the `data-*` attributes on the mount point.
 
-## 2. High-Level System Design (The "What")
+-----
 
-This section provides a visual overview of the system's structure and key user workflows.
+## 2\. High-Level System Design (The "What")
+
+This section provides a visual overview of the MFE's internal structure and its place in the broader system.
 
 ### 2.1. Architecture Diagram
-A high-level view of the system's structure, showing the major components and their interactions.
+
+This diagram shows the internal components of the MFE and its interaction with the host page and the external API.
 
 ```mermaid
 graph TD
-    subgraph "Browser"
-        A[User]
+    subgraph Host Website
+        A[HTML Page]
+        B(div#ai-chatbot-root)
+        C(script tag)
+        A -- Contains --> B
+        A -- Contains --> C
     end
 
-    subgraph "Cloud Provider"
-        B[Next.js Web App]
-        C[API Routes]
-        D[PostgreSQL Database]
+    subgraph "Chatbot MFE (Loaded by Script)"
+        D[Entrypoint/Config Loader]
+        E[State Manager <br> (useChat Hook)]
+        F[UI Components <br> (ChatWindow, MessageList, etc.)]
+        G[API Client <br> (fetch)]
+
+        D -- Reads config from --> B
+        D -- Initializes --> E
+        E -- Provides state to --> F
+        F -- Triggers actions in --> E
+        E -- Makes calls via --> G
+    end
+    
+    subgraph External Services
+        H[Headless AI Chat API]
     end
 
-    A -- HTTPS --> B
-    B -- Renders & Serves Pages --> A
-    B -- Calls API --> C
-    C -- Queries/Mutates Data --> D
+    C -- Loads --> D
+    G -- HTTPS Request --> H
+
 ```
-*Diagram shows a user interacting with the Next.js application, which handles both web page rendering and API calls to the PostgreSQL database.*
 
-### 2.2. System Workflow Example: User Login
-This diagram illustrates the sequence of events for a critical user workflow.
+*Diagram shows the Host Website containing the mount `div` and `script` tag. The script loads the MFE, which reads its configuration from the `div`, initializes its state manager and UI, and communicates with the external Headless API.*
+
+### 2.2. System Workflow Example: End-User Sends a Message
+
+This sequence diagram details the internal and external interactions when a user sends a message.
 
 ```mermaid
 sequenceDiagram
     participant User
-    participant Browser
-    participant WebApp
-    participant API
-    participant Database
+    participant ChatInput as UI: Chat Input
+    participant StateManager as State: useChat Hook
+    participant APIClient as API Client
+    participant HeadlessAPI as External: Headless AI Chat API
 
-    User->>Browser: Enters credentials and clicks 'Login'
-    Browser->>WebApp: POST /login with credentials
-    WebApp->>API: POST /api/auth/login with credentials
-    API->>Database: SELECT user FROM users WHERE email = ...
-    alt User exists and password matches
-        Database-->>API: User Record
-        API->>WebApp: Returns JWT/Session Token
-        WebApp-->>Browser: Sets HTTPOnly Cookie & Redirects to Dashboard
-        Browser-->>User: Displays Dashboard
-    else User not found or password incorrect
-        Database-->>API: Not Found / Null
-        API->>WebApp: Returns 401 Unauthorized
-        WebApp-->>Browser: Renders Login Page with Error
-        Browser-->>User: Displays Error Message
-    end
+    User->>ChatInput: Types "Hello" and clicks Send
+    ChatInput->>StateManager: Calls sendMessage("Hello")
+    StateManager->>StateManager: Adds user message to local state
+    StateManager->>APIClient: POST request with message history
+    APIClient->>HeadlessAPI: POST /api/v1/chat/stream
+    HeadlessAPI-->>APIClient: Begins streaming response chunks
+    APIClient-->>StateManager: Forwards stream chunks
+    StateManager-->>StateManager: Appends chunks to assistant message in local state
+    Note right of User: User sees the AI's reply typing out in real-time
 ```
-*Workflow demonstrates the steps involved from the user submitting credentials to either successfully logging in or receiving an error message.*
 
----
+*Workflow demonstrates the flow from user input to state update, the API call, and the real-time rendering of the streaming response.*
 
-## 3. Technology & Environment (The "With")
+-----
 
-This section details the specific technologies used and how to set up a local development environment.
+## 3\. Technology & Environment (The "With")
+
+This section details the specific technologies used and the development environment.
 
 ### 3.1. Development Environment Setup
-A guide to setting up a local development environment.
-* **Node.js:** `v20.x` or later
-* **pnpm:** `pnpm` is the required package manager.
-* **Docker & Docker Compose:** Required for running the database locally.
-* **Git:** For version control.
+
+  * **Node.js:** `v20.x` or later.
+  * **Package Management:** `pnpm` is the recommended package manager.
+  * **Git:** For version control.
 
 ### 3.2. Technology Stack
-The specific libraries, frameworks, and tools used in this project.
 
-| Category | Technology | Version | Rationale & Usage Notes |
-| :--- | :--- | :--- | :--- |
-| **Framework** | `Next.js` | `^14.1` | SSR support, App Router, Server Actions, API Routes. |
-| **Language** | `TypeScript` | `^5.3` | Provides type safety to reduce runtime errors. Strict mode enabled. |
-| **UI Library** | `React` | `^18.2` | Functional components with state management. |
-| **Styling** | `Tailwind CSS` | `^3.4` | Utility-first for rapid UI development. |
-| **Backend** | `Next.js (API Routes)` | `^14.1` | Provides serverless API endpoints colocated with the frontend. |
-| **Database** | `PostgreSQL` | `^16.1` | Robust, reliable, and excellent for relational data. |
-| **Hosting** | `Cloud Provider` | N/A | Any cloud provider of your choice. |
-| **Linting** | `ESLint` | `^8.5` | Enforces code quality and style. |
-| **Formatting** | `Prettier` | `^3.2` | Automatic code formatting. |
-| **Containerization** | `Docker` | N/A | For consistent local development environments. |
+| Category | Technology | Rationale & Usage Notes |
+| :--- | :--- | :--- |
+| **Build Tool** | `Vite` | Chosen for its fast development server and optimized build outputs for libraries/MFEs. |
+| **UI Framework** | `React` | Industry-standard for building complex, stateful user interfaces. |
+| **Language** | `TypeScript` | For end-to-end type safety from API client to UI components. |
+| **Styling** | `Tailwind CSS` | Utility-first for rapid development. Will be configured with a prefix to prevent style collisions. |
+| **State Management** | Vercel `ai/react` SDK | Provides the `useChat` hook for robust, out-of-the-box management of streaming chat state. |
+| **API Communication** | `fetch` API | The `useChat` hook uses the browser-native `fetch` API internally. |
+| **Hosting** | Static CDN | The final build artifact is a single JS file, hostable on any CDN or static hosting platform. |
 
----
+-----
 
-## 4. Detailed Technical Implementation (The "How")
+## 4\. Detailed Technical Implementation (The "How")
 
-This section provides granular details on implementation patterns, conventions, and constraints for developers.
+This section provides granular details on implementation patterns and conventions.
 
 ### 4.1. Key Implementation Decisions
-Critical implementation-level decisions and their rationale.
-* **API Design:** The project uses **Next.js API Routes** to implement a **RESTful API**. This keeps the frontend and backend in a single codebase, simplifying development.
-* **Authentication:** Authentication is handled using **JWTs (JSON Web Tokens)** with an access token (short-lived, in memory) and a refresh token (long-lived, in a secure `HttpOnly` cookie). This provides a good balance of security and performance.
-* **Data Fetching:** Client-side data fetching uses **React Query (`@tanstack/react-query`)** for robust caching, background refetching, and request deduplication.
-* **State Management:** Global client-side state (e.g., UI theme) uses **Zustand** for its simplicity and minimal boilerplate.
+
+  * **Embedding & Configuration:** The application's main entry point (`main.tsx`) will be responsible for finding the mount `div` (e.g., `#ai-chatbot-root`) and extracting the `data-api-url` and `data-api-key` from its dataset attributes. These values will be passed as configuration to the main React `App` component.
+  * **Streaming Logic:** The Vercel AI SDK's `useChat` hook will be the core of the chat functionality. It will be configured at initialization with the `apiUrl` and `headers` (containing the `X-API-Key`) read from the embedding configuration. This decision mitigates the risk of implementing complex streaming logic manually.
+  * **Fullscreen Mode:** A simple React state (`const [isFullscreen, setIsFullscreen] = useState(false)`) will be used. When `isFullscreen` is `true`, a CSS class will be conditionally applied to the widget's root element. This class will apply `position: fixed`, `inset: 0`, `z-index: 9999`, and other styles to make it cover the viewport.
+  * **Style Encapsulation:** To prevent CSS conflicts with host websites, the `tailwind.config.js` file will be configured with a `prefix`. For example, setting `prefix: 'aicb-'` will transform utilities like `bg-blue-500` into `aicb-bg-blue-500`, guaranteeing style isolation.
 
 ### 4.2. Design Patterns & Coding Conventions
-All code should adhere to the following patterns for consistency.
-* **Folder Structure:** A **feature-based** folder structure is used within the `src/` directory.
+
+  * **Folder Structure:** A standard feature-based React project structure will be used:
     ```
     /src
-    ├── /app
-    ├── /components  # Shared, reusable UI components
-    └── /features
-        └── /auth    # Authentication feature
-            ├── /components
-            └── /api     # API route handlers
+        /components  # Generic, reusable UI (Button, Icon, etc.)
+        /features    # Feature-specific components (ChatWindow, MessageList)
+        /hooks       # Custom hooks (e.g., useFullscreenToggle)
+        /lib         # Utility functions
+        main.tsx     # Application entry point
     ```
-* **Component Design:** Components should be small and focused. Where appropriate, the **Container/Presentational Pattern** is encouraged to separate logic from UI.
-* **Naming Conventions:**
-    * Components: `PascalCase` (e.g., `UserProfile.tsx`)
-    * Functions/Variables: `camelCase` (e.g., `getUserProfile`)
-    * Types/Interfaces: `PascalCase` (e.g., `type UserProfile`)
-* **Error Handling:**
-    * **API:** Use centralized middleware for catching errors and formatting consistent responses.
-    * **Client:** Use React's **Error Boundaries** to catch rendering errors and `try/catch` blocks in data-fetching functions.
+  * **Component Design:** Components will be small and follow the single-responsibility principle. Headless component libraries (e.g., Radix UI) may be used as a base for UI elements like dialogs to ensure high quality and accessibility.
+  * **Custom Hooks:** All non-trivial stateful logic will be extracted into custom hooks to promote reusability and separation of concerns (e.g., `useWidgetConfig` to read `data-*` attributes).
 
 ### 4.3. Technical Constraints
-Known limitations that developers must be aware of.
-* **Database:** The project is developed against **PostgreSQL**. While Prisma allows for swapping databases, custom SQL queries are written in PostgreSQL syntax.
-* **API Rate Limits:** Any third-party APIs used (e.g., GitHub) have rate limits. Code must handle potential `429 Too Many Requests` errors gracefully.
-* **Browser Support:** Officially supports the **last two major versions of Chrome, Firefox, and Safari**. Functionality on other browsers is not guaranteed.
-* **Performance Budget:** The initial JavaScript bundle size must not exceed **250kB (gzipped)**. Use `@next/bundle-analyzer` to monitor this.
 
----
+  * The final build output must be a single JavaScript file. Vite's library mode will be configured to achieve this.
+  * The application must not rely on any global variables or libraries (like jQuery or even React) from the host page. React will be bundled into the application.
+  * The application must gracefully handle and display network errors or non-200 status codes from the API, informing the user that the service is unavailable.
 
-## 5. Future Considerations
+-----
 
-Next steps to improve documentation and architecture as the project grows.
+## 5\. Future Considerations
 
-* **Adopt ADRs (Architecture Decision Records):** For more complex projects, create a dedicated `docs/adr/` directory. Each significant decision gets its own timestamped markdown file (e.g., `001-use-postgresql-database.md`). This creates an invaluable historical log of the project's evolution.
-* **Explore the C4 Model:** The diagram above is a simplified C4 "Container" diagram. The C4 model (Context, Containers, Components, Code) provides a framework for visualizing software at different levels of detail.
-* **Integrate Infrastructure as Code (IaC):** Consider defining your infrastructure using tools like Terraform. This makes your hosting setup repeatable, version-controlled, and documented by default.
+  * **Theming:** To support the "theme customization" feature, the `useWidgetConfig` hook would be extended to read additional `data-theme-primary-color` attributes. These values would then be applied to the root element as CSS variables, allowing for easy themeing.
+  * **`localStorage` History:** To support conversation persistence, the `useChat` hook can be wrapped in another custom hook that synchronizes its `messages` state with `localStorage` on change. An initial configuration `data-enable-history="true"` would be used to enable this feature.
+  * **Testing Strategy:** The project will include unit tests for hooks and components using `Vitest`. End-to-end testing of the embedding mechanism will be done using a simple `index.html` file within a `/test-harness` directory.
