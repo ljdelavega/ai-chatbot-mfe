@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import WidgetContainer from './WidgetContainer';
 import MinimizeBar from './MinimizeBar';
 import type { WidgetState } from './WidgetContainer';
@@ -18,6 +18,7 @@ export interface WidgetProps {
   className?: string;
   initialState?: WidgetState;
   minimizeBarPosition?: 'bottom-right' | 'bottom-left' | 'bottom-center';
+  onStateChange?: (state: WidgetState) => void;
 }
 
 const Widget: React.FC<WidgetProps> = ({
@@ -34,6 +35,7 @@ const Widget: React.FC<WidgetProps> = ({
   className = '',
   initialState = 'normal',
   minimizeBarPosition = 'bottom-right',
+  onStateChange,
 }) => {
   const [widgetState, setWidgetState] = useState<WidgetState>(initialState);
   const [previousState, setPreviousState] = useState<WidgetState>('normal');
@@ -41,22 +43,33 @@ const Widget: React.FC<WidgetProps> = ({
   const handleMinimize = useCallback(() => {
     setPreviousState(widgetState);
     setWidgetState('minimized');
-  }, [widgetState]);
+    onStateChange?.('minimized');
+  }, [widgetState, onStateChange]);
 
   const handleRestore = useCallback(() => {
-    setWidgetState(previousState === 'minimized' ? 'normal' : previousState);
-  }, [previousState]);
+    const newState = previousState === 'minimized' ? 'normal' : previousState;
+    setWidgetState(newState);
+    onStateChange?.(newState);
+  }, [previousState, onStateChange]);
 
   const handleToggleFullscreen = useCallback(() => {
     if (widgetState === 'fullscreen') {
-      setWidgetState(previousState === 'minimized' ? 'normal' : previousState);
+      const newState = previousState === 'minimized' ? 'normal' : previousState;
+      setWidgetState(newState);
+      onStateChange?.(newState);
     } else {
       setPreviousState(widgetState);
       setWidgetState('fullscreen');
+      onStateChange?.('fullscreen');
     }
-  }, [widgetState, previousState]);
+  }, [widgetState, previousState, onStateChange]);
 
-
+  // Sync internal state with external state changes
+  useEffect(() => {
+    if (initialState !== widgetState) {
+      setWidgetState(initialState);
+    }
+  }, [initialState, widgetState]);
 
   return (
     <>

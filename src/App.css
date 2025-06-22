@@ -40,3 +40,33 @@
 .read-the-docs {
   color: #888;
 }
+
+/* Integrated Widget Page Styles */
+.integrated-widget-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .integrated-widget-page {
+    /* On mobile, ensure proper touch handling */
+    touch-action: manipulation;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .integrated-widget-page {
+    background: #ffffff;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

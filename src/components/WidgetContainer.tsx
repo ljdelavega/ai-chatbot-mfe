@@ -106,7 +106,7 @@ const WidgetContainer: React.FC<WidgetContainerProps> = ({
         return `${baseClasses} fixed inset-4 z-50 max-w-none max-h-none w-auto h-auto rounded-lg`;
       case 'normal':
       default:
-        return `${baseClasses} w-80 h-96 max-w-sm`;
+        return `${baseClasses} fixed bottom-4 right-4 w-80 h-96 max-w-sm z-50`;
     }
   };
 
