@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react'
+import { useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import Widget from '../components/Widget'
 import { useChat, useWidgetConfig, useWidgetState } from '../hooks'
@@ -39,6 +39,7 @@ function IntegratedWidget() {
     messages,
     isLoading,
     error: chatError,
+    streamingMessageId,
     sendMessage,
     retry,
     clearMessages,
@@ -50,16 +51,16 @@ function IntegratedWidget() {
     }
   })
 
-  // Initialize with welcome message if no messages exist
-  useEffect(() => {
-    if (messages.length === 0) {
-      // We'll simulate adding a welcome message by using a timeout
-      // In a real implementation, this might be handled differently
-      setTimeout(() => {
-        // For now, we'll let the empty state component handle the welcome
-      }, 100)
-    }
-  }, [messages.length])
+  // Debug logging for development
+  console.log('🔍 Debug Info:', {
+    messageCount: messages.length,
+    isLoading,
+    streamingMessageId,
+    hasError: !!chatError,
+    config: config?.baseUrl
+  })
+
+  // The useChat hook now handles welcome message initialization automatically
 
   // Handle sending messages
   const handleSendMessage = useCallback(async (content: string) => {
@@ -253,7 +254,7 @@ function IntegratedWidget() {
          messages={messages}
          onSendMessage={handleSendMessage}
          isLoading={isLoading}
-         streamingMessageId={undefined} // We'll handle streaming internally in the hook
+         streamingMessageId={streamingMessageId || undefined}
          hasNewMessages={false} // We'll implement this later
          networkStatus="online" // We'll implement network status in the hook
          errorState={chatError ? {
