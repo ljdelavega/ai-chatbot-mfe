@@ -86,4 +86,8 @@ export const storage = {
   }
 };
 
+// Convenience functions for backward compatibility
+export const getWidgetPreferences = storage.getWidgetPreferences;
+export const saveWidgetPreferences = storage.setWidgetPreferences;
+
 export default storage; 

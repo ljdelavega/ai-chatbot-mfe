@@ -35,7 +35,7 @@ export function useWidgetState({
   const getInitialState = useCallback((): WidgetState => {
     if (enablePersistence) {
       const preferences = getWidgetPreferences();
-      return preferences.widgetState || initialState;
+      return preferences?.lastState || initialState;
     }
     return initialState;
   }, [initialState, enablePersistence]);
@@ -61,7 +61,7 @@ export function useWidgetState({
       // Save to storage if persistence is enabled
       if (enablePersistence) {
         saveWidgetPreferences({
-          widgetState: newState,
+          lastState: newState === 'fullscreen' ? 'normal' : newState, // Don't save fullscreen state
           rememberState: true
         });
       }

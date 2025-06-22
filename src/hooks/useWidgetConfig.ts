@@ -114,16 +114,27 @@ export function useWidgetConfig({
 
     try {
       let element = mountElement;
+      let elementConfig: Partial<WidgetConfig> = {};
       
       // If no mount element provided, try to find it
       if (!element) {
         element = document.getElementById('ai-chatbot-root');
         if (!element) {
-          element = document.querySelector('[data-ai-chatbot]');
+          element = document.querySelector('[data-ai-chatbot]') as HTMLElement;
         }
       }
 
-      if (!element) {
+      // If we found an element, read configuration from it
+      if (element) {
+        elementConfig = readConfigFromElement(element);
+      }
+      // If no element found and we have defaults, use defaults (development mode)
+      else if (defaults && Object.keys(defaults).length > 0) {
+        console.log('🔧 Development mode: Using provided defaults instead of mount element');
+        elementConfig = {}; // Use empty config, rely on defaults
+      }
+      // If no element and no meaningful defaults, show error
+      else {
         setErrors(['No mount element found. Expected element with id="ai-chatbot-root" or data-ai-chatbot attribute.']);
         setIsValid(false);
         setConfig(null);
@@ -131,9 +142,6 @@ export function useWidgetConfig({
         return;
       }
 
-      // Read configuration from element
-      const elementConfig = readConfigFromElement(element);
-      
       // Merge with defaults
       const mergedConfig = {
         ...DEFAULT_CONFIG,

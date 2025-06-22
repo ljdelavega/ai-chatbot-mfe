@@ -160,7 +160,7 @@ export class MockChatbotApiClient {
 export function createApiClient(apiUrl: string, apiKey: string) {
   // In development, use mock API if the URL contains 'localhost' and port 8000
   // This allows testing without running the real API
-  if (apiUrl.includes('localhost:8000') && process.env.NODE_ENV === 'development') {
+  if (apiUrl.includes('localhost:8000') && import.meta.env.DEV) {
     console.log('🔧 Using Mock API for development testing');
     return new MockChatbotApiClient(apiUrl, apiKey);
   }

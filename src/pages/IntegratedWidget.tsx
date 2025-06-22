@@ -2,7 +2,7 @@ import { useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import Widget from '../components/Widget'
 import { useChat, useWidgetConfig, useWidgetState } from '../hooks'
-import type { Message } from '../lib/types'
+
 
 function IntegratedWidget() {
   // Mock configuration for development - in real embedding this would come from data attributes
@@ -24,9 +24,8 @@ function IntegratedWidget() {
     setNormal,
     setFullscreen,
     setMinimized,
-    toggleFullscreen,
-    toggleMinimized,
-    restoreFromMinimized
+
+
   } = useWidgetState({
     initialState: 'normal',
     enablePersistence: true,
@@ -42,7 +41,7 @@ function IntegratedWidget() {
     streamingMessageId,
     sendMessage,
     retry,
-    clearMessages,
+
     clearError
   } = useChat({
     config: config || mockConfig, // Fallback to mock config
