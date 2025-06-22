@@ -1,0 +1,26 @@
+---
+description: rules to parse solution architecture from docs/architecture.md
+globs: 
+alwaysApply: false
+---
+---
+description: rules to parse solution architecture from docs/architecture_docs.md
+globs: 
+alwaysApply: true
+---
+# Architecture Understanding
+READ_ARCHITECTURE: |
+  File: docs/architecture_docs.md @architecture_docs.md
+  Required parsing:
+  1. Load and parse the complete architecture_docs.md file.
+  2. Extract and understand:
+     - Module boundaries and relationships
+     - Data flow patterns
+     - System interfaces
+     - Component dependencies
+  3. Validate any changes against architectural constraints.
+  4. Ensure new code maintains the defined separation of concerns.
+  
+  Error handling:
+  1. If the file is not found, STOP and notify the user.
+  2. If an architectural violation is detected, WARN the user.

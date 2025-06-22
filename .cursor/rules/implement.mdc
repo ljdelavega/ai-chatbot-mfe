@@ -1,0 +1,144 @@
+---
+description: Always attach when Implementing Code (Act/Code MODE)
+globs: 
+alwaysApply: false
+---
+---
+description: Include these rules during IMPLEMENTATION/Coding.
+globs: 
+alwaysApply: true
+---
+Before every code implementation/change, ALWAYS do two things:
+a. Read and understand the documentation in `docs/` and `tasks/`.
+b. Get required code context from `src/` and other relevant source code files.
+---
+# IMPLEMENTATION (ACT MODE/Code MODE):
+<PROGRAMMING PRINCIPLES>
+- algorithm_efficiency: Use the most efficient algorithms and data structures.
+- modularity: Write modular code. Break complex logic into smaller, atomic parts. Whenever possible, break logic into classes, files, directories, modules, functions, etc.
+- file_management: Break long files into smaller, more manageable files with smaller functions.
+- import_statements: Prefer importing functions from other files instead of modifying those files directly.
+- file_organization: Organize files into logical directories and folders.
+- reuse: Prefer to reuse existing code instead of writing it from scratch. 
+- code_preservation: Preserve what works. Do not modify working components without necessity.
+- systematic_sequence: Complete one step completely before starting another. Maintain a systematic sequence of implementing functionalities.
+- design_patterns: Apply appropriate design patterns for maintainability. Plan for future changes by writing extendable, flexible, scalable, and maintainable code.
+- proactive_testing: Any new functionality should be accompanied by proper test code as defined in <TESTING>.
+</PROGRAMMING PRINCIPLES>
+
+<SYSTEMATIC CODE PROTOCOL>
+[Step: 1]
+<ANALYZE CODE>
+<DEPENDENCY ANALYSIS>
+- Which components will be affected?
+- What dependencies exist?
+- Is this change local, or does it affect core logic?
+- Which functionalities will be affected and how?
+- What cascading effects will this change have?
+</DEPENDENCY ANALYSIS>
+<FLOW ANALYSIS>
+- Before proposing any changes, conduct a complete end-to-end flow analysis of the relevant use case from the entry point (e.g., function call, variable initialization) to the execution of all affected code. 
+- Track the flow of data and logic throughout all components involved to understand its full scope.
+</FLOW ANALYSIS>
+- Document these dependencies thoroughly, including the specific usage of functions or logic in the files specified in memory.mdc.
+</ANALYZE CODE>
+
+[Step: 2]
+<PLAN CODE>
+- If needed, initiate the <CLARIFICATION> process.
+- Use <STEP BY STEP REASONING> to outline a detailed plan including component dependencies and architectural considerations before coding. Use <REASONING PRESENTATION> to explain all code changes, what each part does, and how it affects other areas.
+<STRUCTURED PROPOSALS>
+- Provide a proposal that specifies: 1) what files, functions, or lines of code are being changed; 2) why the change is necessary (e.g., bug fix, improvement, or new feature); 3) all directly impacted modules or files; 4) potential side effects; 5) a detailed explanation of any tradeoffs.
+</STRUCTURED PROPOSALS> 
+</PLAN CODE>
+
+[Step: 3]
+<MAKE CHANGES>
+
+1. Document Current State in files specified by @memory.mdc
+- What is currently working?
+- What is the current error/issue?
+- Which files will be affected?
+
+2. Plan a Single Logical Change at a Time
+<INCREMENTAL ROLLOUTS>
+- One logical feature at a time.
+- But fully resolve this one change by making appropriate accommodations in other parts of the code.
+- Adjust all existing dependencies and issues created by this change.
+- architecture_preservation: Ensure that all new code integrates seamlessly with the existing project structure and architecture before committing changes. Do not make changes that disrupt the existing code organization or files.
+</INCREMENTAL ROLLOUTS>
+
+3. Simulation Testing
+<SIMULATION ANALYSIS>
+- Simulate user interactions and behaviors by performing dry runs, trace calls, or other appropriate methods to rigorously analyze the impact of the proposed changes on both expected and edge-case scenarios. 
+- Generate feedback on all potential side effects.
+</SIMULATION ANALYSIS>
+<SIMULATION VALIDATION>
+- Do not propose a change unless the simulation passes and verifies that all existing functionality is preserved. If a simulation breaks, provide fixes immediately before proceeding.
+</SIMULATION VALIDATION>
+- If Simulation Testing Passes, do the actual implementation.
+</MAKE CHANGES>
+
+[Step: 4] Perform <TESTING>.
+
+[Step: 5] LOOP 1-4 and implement all changes
+- Incorporate all the changes systematically, one by one.
+- Verify the changes and test them one by one.
+
+[Step: 6] Optimize the implemented code
+- Optimize the implemented code after all changes are tested and verified.
+
+</SYSTEMATIC CODE PROTOCOL>
+
+<REFERENCE>
+- Reference relevant documentation and best practices.
+- Ensure solution uses proper documentation based on the project setup (imported libraries and language versions)
+    i. **Acknowledge Staleness:** Recognize that your knowledge of a library's API might not be current.
+    ii. **Prioritize External Tools:** Before generating code for any public library, you should strongly consider using an available external tool (like **context7**) to fetch the latest, version-specific documentation.
+    iii. **Avoid Deprecated Patterns:** Never generate code that you know has been deprecated, even if it was common in your training data.
+<WEB USE> 
+You can use the web if needed to do research by using installed MCPs, such as the documentation search tool context7.
+**Available Tools:**
+- **`resolve-library-id`**: Find the correct library identifier for documentation
+- **`get-library-docs`**: Fetch up-to-date documentation for libraries
+**Usage Guidelines:**
+- Always call `resolve-library-id` first unless user provides exact library ID
+- Use for getting current documentation when local docs are outdated
+- Specify topic parameter to focus on relevant sections
+**Library docs**: Use Context7 for up-to-date documentation
+**Notify User of Usage**: Whenever you use context7 to get up-to-date documentation, say "I used context7 to get the most up-to-date docs."
+</WEB USE>
+- Use <WEB USE> if needed to refer to documentation or best practices.
+
+</REFERENCE>
+
+# TESTING (Always write TEST after IMPLEMENTATION) [ACT/Code MODE]
+<TESTING>
+
+<DEPENDENCY BASED TESTING>
+Create unit tests for any new functionality. Run all tests from <ANALYZE CODE> to confirm that existing behavior is still as expected.
+</DEPENDENCY BASED TESTING>
+<NO BREAKAGE ASSERTION>
+After you propose a change, run the tests yourself and verify that it passes. Do not rely on me to do this, and be certain that my code will not be broken.
+</NO BREAKAGE ASSERTION>
+
+1. Write test logic in separate files from the code implementation for the functionality to keep the code clean and maintainable.
+
+<TEST PLAN>
+- Create sufficiently exhaustive test plans for the functionality being added or updated, based on the requirements and desired outcomes.
+- Define comprehensive test scenarios covering edge cases.
+- Specify appropriate validation methods for the project's stack.
+- Suggest monitoring approaches to verify the solution's effectiveness.
+- Consider potential regressions and how to prevent them.
+</TEST PLAN>
+
+2. Write test code for ANY added critical functionality ALWAYS. For initial test generation, use <DEPENDENCY BASED TESTING> and <NO BREAKAGE ASSERTION>. Then use <TEST PLAN> to write code for extensive testing.
+3. Document testing as specified in @memory.mdc.
+</TESTING>
+
+- When implementing something new, be relentless and implement everything to the letter. Stop only when you're done with successful testing, not before.
+
+---
+After every code implementation/change, ALWAYS do two things:
+a. Update other possibly affected code in `src/` and other relevant directories.
+b. Update the documentation in `docs/` and `tasks/`.

@@ -1,0 +1,29 @@
+---
+description: Always include while DEBUGGING
+globs: 
+alwaysApply: false
+---
+---
+description: Include these rules while DEBUGGING.
+globs: 
+alwaysApply: true
+---
+<DEBUGGING>
+The debugging routine below is for persistent errors or incomplete fixes. Use this routine only when you are stuck.
+
+<DIAGNOSE>
+- Gather all error messages, logs, and behavioral symptoms.
+- Add relevant context from files.
+- Retrieve the relevant project architecture, plan, and current working task as specified in @memory.mdc.
+</DIAGNOSE>
+
+- Whenever a test fails, add more context using <DIAGNOSE> to debug the issue effectively. Only move toward a fix when you have complete information.
+- Explain your OBSERVATIONS, and then provide your REASONING to explain exactly why this is the issue and not something else.
+- If you are not sure, first get more OBSERVATIONS by adding more <DIAGNOSE> context to the issue so you know exactly and specifically what is wrong. Additionally, you can seek <CLARIFICATION> if required.
+- Understand the architecture relevant to the issue using <ANALYZE CODE> (defined in [implement.mdc](mdc:.cursor/rules/implement.mdc)).
+- Use <STEP BY STEP REASONING> to consider all possible causes, such as an architectural misalignment or a design flaw, rather than just a bug.
+- Look for similar patterns already solved elsewhere in the codebase in `@error-documentation.mdc` and use <WEB USE> if needed.
+- Present your fix using <REASONING PRESENTATION> for validation.
+- Start modifying code to update and fix things using <SYSTEMATIC CODE PROTOCOL> and <TESTING> (both defined in `implement.mdc`).
+
+</DEBUGGING>
