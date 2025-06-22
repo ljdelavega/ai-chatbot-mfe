@@ -74,8 +74,7 @@ const MessageList: React.FC<MessageListProps> = ({
   return (
     <div 
       ref={scrollContainerRef}
-      className={`flex-1 overflow-y-auto ${className}`}
-      style={{ scrollBehavior: 'smooth' }}
+      className={`flex-1 overflow-y-auto smooth-scroll custom-scrollbar ${className}`}
     >
       {messages.length === 0 && !isLoading ? (
         renderEmptyState()

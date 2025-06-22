@@ -4,7 +4,11 @@ import MessageBubble from './components/MessageBubble'
 import MessageList from './components/MessageList'
 import MessageInput from './components/MessageInput'
 import ChatHeader from './components/ChatHeader'
+import WidgetContainer from './components/WidgetContainer'
+import MinimizeBar from './components/MinimizeBar'
+import Widget from './components/Widget'
 import type { Message } from './lib/types'
+import type { WidgetState } from './components/WidgetContainer'
 import './App.css'
 
 function App() {
@@ -12,6 +16,8 @@ function App() {
   const [loading, setLoading] = useState(false)
   const [inputDisabled, setInputDisabled] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
+  const [widgetState, setWidgetState] = useState<WidgetState>('normal')
+  const [showMinimizeBar, setShowMinimizeBar] = useState(false)
 
   const handleAsyncAction = async () => {
     setLoading(true)
@@ -39,6 +45,11 @@ function App() {
   const handleClose = () => {
     console.log('Close clicked')
     alert('Close clicked!')
+  }
+
+  const handleMinimizeBarClick = () => {
+    setShowMinimizeBar(false)
+    alert('MinimizeBar clicked - widget restored!')
   }
 
   // Mock messages for testing
@@ -85,6 +96,142 @@ function App() {
       <h1 className="text-3xl font-bold mb-8">AI Chatbot Widget - Component Testing</h1>
       
       <div className="space-y-8">
+        <section>
+          <h2 className="text-xl font-semibold mb-4">Complete Widget System Tests</h2>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-1 gap-6">
+            {/* Complete Widget Demo */}
+            <div className="space-y-4">
+              <h3 className="font-medium">Complete Widget with All States</h3>
+              <div className="p-4 bg-gray-50 rounded-lg">
+                <p className="text-sm text-gray-600 mb-4">
+                  This demonstrates the complete widget system with normal, fullscreen, and minimize states.
+                  Try the minimize and fullscreen buttons!
+                </p>
+                <div className="relative h-96">
+                  <Widget
+                    messages={mockMessages}
+                    onSendMessage={handleSendMessage}
+                    isLoading={loading}
+                    streamingMessageId="5"
+                    title="Complete Widget Demo"
+                    subtitle="All features working"
+                    onClose={handleClose}
+                    initialState={widgetState}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <h2 className="text-xl font-semibold mb-4">Layout Component Tests</h2>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* WidgetContainer Tests */}
+            <div className="space-y-4">
+              <h3 className="font-medium">WidgetContainer States</h3>
+              
+              <div className="space-y-2">
+                <h4 className="text-sm font-medium">Normal State</h4>
+                <div className="relative h-96 bg-gray-50 p-4 rounded-lg">
+                  <WidgetContainer
+                    messages={mockMessages.slice(0, 3)}
+                    onSendMessage={handleSendMessage}
+                    title="Normal Widget"
+                    subtitle="Default size"
+                    initialState="normal"
+                  />
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <h4 className="text-sm font-medium">Widget State Controls</h4>
+                <div className="flex gap-2">
+                  <Button size="sm" onClick={() => setWidgetState('normal')}>
+                    Normal
+                  </Button>
+                  <Button size="sm" onClick={() => setWidgetState('fullscreen')}>
+                    Fullscreen
+                  </Button>
+                  <Button size="sm" onClick={() => setWidgetState('minimized')}>
+                    Minimized
+                  </Button>
+                </div>
+                <p className="text-xs text-gray-600">Current state: <strong>{widgetState}</strong></p>
+              </div>
+            </div>
+            
+            {/* MinimizeBar Tests */}
+            <div className="space-y-4">
+              <h3 className="font-medium">MinimizeBar Component</h3>
+              
+              <div className="space-y-2">
+                <h4 className="text-sm font-medium">Different Positions</h4>
+                <div className="space-y-2">
+                  <Button 
+                    size="sm" 
+                    variant="secondary"
+                    onClick={() => setShowMinimizeBar(!showMinimizeBar)}
+                  >
+                    {showMinimizeBar ? 'Hide' : 'Show'} MinimizeBar
+                  </Button>
+                  
+                  {showMinimizeBar && (
+                    <div className="relative h-32 bg-gray-100 rounded-lg overflow-hidden">
+                      <p className="text-xs text-gray-600 p-2">MinimizeBar shown in bottom-right</p>
+                      <MinimizeBar
+                        title="Test MinimizeBar"
+                        subtitle="Click to restore"
+                        onClick={handleMinimizeBarClick}
+                        position="bottom-right"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <h4 className="text-sm font-medium">Static MinimizeBars</h4>
+                <div className="space-y-4">
+                  {/* Bottom Right */}
+                  <div className="relative h-20 bg-gray-100 rounded-lg overflow-hidden">
+                    <p className="text-xs text-gray-600 p-2">Bottom Right</p>
+                    <div className="absolute bottom-2 right-2">
+                      <div className="bg-white border border-gray-200 rounded-full shadow-lg">
+                        <div className="flex items-center gap-3 px-4 py-3">
+                          <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                            <Icon name="bot" size={16} className="text-white" />
+                          </div>
+                          <span className="text-sm font-semibold text-gray-900">AI Chatbot</span>
+                          <Icon name="chevron-up" size={14} className="text-gray-400" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Bottom Left */}
+                  <div className="relative h-20 bg-gray-100 rounded-lg overflow-hidden">
+                    <p className="text-xs text-gray-600 p-2">Bottom Left</p>
+                    <div className="absolute bottom-2 left-2">
+                      <div className="bg-white border border-gray-200 rounded-full shadow-lg">
+                        <div className="flex items-center gap-3 px-4 py-3">
+                          <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                            <Icon name="bot" size={16} className="text-white" />
+                          </div>
+                          <span className="text-sm font-semibold text-gray-900">Support Chat</span>
+                          <Icon name="chevron-up" size={14} className="text-gray-400" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <section>
           <h2 className="text-xl font-semibold mb-4">ChatHeader Component Tests</h2>
           

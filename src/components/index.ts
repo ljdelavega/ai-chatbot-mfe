@@ -10,6 +10,11 @@ export { default as MessageList } from './MessageList';
 export { default as MessageInput } from './MessageInput';
 export { default as ChatHeader } from './ChatHeader';
 
+// Layout Components
+export { default as WidgetContainer } from './WidgetContainer';
+export { default as MinimizeBar } from './MinimizeBar';
+export { default as Widget } from './Widget';
+
 // Export types
 export type { ButtonProps } from './Button';
 export type { IconProps } from './Icon';
@@ -18,4 +23,7 @@ export type { AvatarProps } from './Avatar';
 export type { MessageBubbleProps } from './MessageBubble';
 export type { MessageListProps } from './MessageList';
 export type { MessageInputProps } from './MessageInput';
-export type { ChatHeaderProps } from './ChatHeader'; 
+export type { ChatHeaderProps } from './ChatHeader';
+export type { WidgetContainerProps, WidgetState } from './WidgetContainer';
+export type { MinimizeBarProps } from './MinimizeBar';
+export type { WidgetProps } from './Widget'; 
