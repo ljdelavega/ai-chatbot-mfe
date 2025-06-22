@@ -6,7 +6,7 @@ const STORAGE_KEYS = {
 } as const;
 
 export interface WidgetPreferences {
-  lastState: 'normal' | 'fullscreen' | 'minimized';
+  lastState: 'normal' | 'minimized'; // Never save fullscreen state
   rememberState: boolean;
   lastPosition?: {
     x: number;
@@ -20,8 +20,9 @@ export const storage = {
   getWidgetState(): 'normal' | 'fullscreen' | 'minimized' | null {
     try {
       const state = sessionStorage.getItem(STORAGE_KEYS.WIDGET_STATE);
-      if (state && ['normal', 'fullscreen', 'minimized'].includes(state)) {
-        return state as 'normal' | 'fullscreen' | 'minimized';
+      // Only allow 'normal' or 'minimized' - never restore to fullscreen
+      if (state && ['normal', 'minimized'].includes(state)) {
+        return state as 'normal' | 'minimized';
       }
     } catch (error) {
       console.warn('Failed to read widget state from storage:', error);
@@ -32,7 +33,9 @@ export const storage = {
   // Save widget state to session storage
   setWidgetState(state: 'normal' | 'fullscreen' | 'minimized'): void {
     try {
-      sessionStorage.setItem(STORAGE_KEYS.WIDGET_STATE, state);
+      // Don't save fullscreen state - always save as normal instead
+      const stateToSave = state === 'fullscreen' ? 'normal' : state;
+      sessionStorage.setItem(STORAGE_KEYS.WIDGET_STATE, stateToSave);
     } catch (error) {
       console.warn('Failed to save widget state to storage:', error);
     }

@@ -11,6 +11,12 @@ function IntegratedWidget() {
   const [isLoading, setIsLoading] = useState(false)
   const [streamingMessageId, setStreamingMessageId] = useState<string | null>(null)
   const [hasNewMessages, setHasNewMessages] = useState(false)
+  const [networkStatus, setNetworkStatus] = useState<'online' | 'offline' | 'reconnecting' | 'error'>('online')
+  const [errorState, setErrorState] = useState<{
+    type: 'network' | 'api' | 'timeout' | 'rate-limit' | 'auth' | 'generic';
+    title?: string;
+    message?: string;
+  } | null>(null)
 
   // Initialize with welcome message
   useEffect(() => {
@@ -28,6 +34,9 @@ function IntegratedWidget() {
   const handleSendMessage = useCallback(async (content: string) => {
     if (!content.trim()) return
 
+    // Clear any existing errors
+    setErrorState(null)
+
     // Add user message
     const userMessage: Message = {
       id: `user-${Date.now()}`,
@@ -39,53 +48,108 @@ function IntegratedWidget() {
 
     setMessages(prev => [...prev, userMessage])
     setIsLoading(true)
+    setNetworkStatus('reconnecting')
 
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    try {
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 1000))
 
-    // Add assistant message with streaming simulation
-    const assistantMessageId = `assistant-${Date.now()}`
-    const assistantMessage: Message = {
-      id: assistantMessageId,
-      role: 'assistant',
-      content: '',
-      timestamp: new Date(),
-      status: 'loading'
-    }
+      // Simulate random errors for demonstration (10% chance)
+      if (Math.random() < 0.1) {
+        const errorTypes = ['network', 'api', 'timeout', 'rate-limit'] as const
+        const randomError = errorTypes[Math.floor(Math.random() * errorTypes.length)]
+        throw new Error(randomError)
+      }
 
-    setMessages(prev => [...prev, assistantMessage])
-    setStreamingMessageId(assistantMessageId)
-    setIsLoading(false)
+      setNetworkStatus('online')
 
-    // Simulate streaming response
-    const fullResponse = getSimulatedResponse(content)
-    let currentContent = ''
+      // Add assistant message with streaming simulation
+      const assistantMessageId = `assistant-${Date.now()}`
+      const assistantMessage: Message = {
+        id: assistantMessageId,
+        role: 'assistant',
+        content: '',
+        timestamp: new Date(),
+        status: 'loading'
+      }
 
-    for (let i = 0; i < fullResponse.length; i++) {
-      currentContent += fullResponse[i]
-      
+      setMessages(prev => [...prev, assistantMessage])
+      setStreamingMessageId(assistantMessageId)
+      setIsLoading(false)
+
+      // Simulate streaming response
+      const fullResponse = getSimulatedResponse(content)
+      let currentContent = ''
+
+      for (let i = 0; i < fullResponse.length; i++) {
+        currentContent += fullResponse[i]
+        
+        setMessages(prev => prev.map(msg => 
+          msg.id === assistantMessageId 
+            ? { ...msg, content: currentContent, status: 'loading' }
+            : msg
+        ))
+
+        // Random delay between 20-100ms for realistic typing effect
+        const delay = Math.random() * 80 + 20
+        await new Promise(resolve => setTimeout(resolve, delay))
+      }
+
+      // Mark as complete
       setMessages(prev => prev.map(msg => 
         msg.id === assistantMessageId 
-          ? { ...msg, content: currentContent, status: 'loading' }
+          ? { ...msg, status: 'complete' }
           : msg
       ))
+      setStreamingMessageId(null)
 
-      // Random delay between 20-100ms for realistic typing effect
-      const delay = Math.random() * 80 + 20
-      await new Promise(resolve => setTimeout(resolve, delay))
-    }
+      // Show new message indicator if widget is minimized
+      if (widgetState === 'minimized') {
+        setHasNewMessages(true)
+      }
+    } catch (error) {
+      setIsLoading(false)
+      setStreamingMessageId(null)
+      setNetworkStatus('error')
 
-    // Mark as complete
-    setMessages(prev => prev.map(msg => 
-      msg.id === assistantMessageId 
-        ? { ...msg, status: 'complete' }
-        : msg
-    ))
-    setStreamingMessageId(null)
-
-    // Show new message indicator if widget is minimized
-    if (widgetState === 'minimized') {
-      setHasNewMessages(true)
+      // Set error state based on error type
+      const errorMessage = error instanceof Error ? error.message : 'generic'
+      switch (errorMessage) {
+        case 'network':
+          setErrorState({
+            type: 'network',
+            title: 'Connection Failed',
+            message: 'Unable to reach the AI service. Please check your internet connection.'
+          })
+          break
+        case 'api':
+          setErrorState({
+            type: 'api',
+            title: 'Service Unavailable',
+            message: 'The AI service is temporarily unavailable. Please try again later.'
+          })
+          break
+        case 'timeout':
+          setErrorState({
+            type: 'timeout',
+            title: 'Request Timeout',
+            message: 'The request took too long. Please try sending your message again.'
+          })
+          break
+        case 'rate-limit':
+          setErrorState({
+            type: 'rate-limit',
+            title: 'Rate Limited',
+            message: 'Too many requests. Please wait a moment before trying again.'
+          })
+          break
+        default:
+          setErrorState({
+            type: 'generic',
+            title: 'Something went wrong',
+            message: 'An unexpected error occurred. Please try again.'
+          })
+      }
     }
   }, [widgetState])
 
@@ -99,8 +163,10 @@ function IntegratedWidget() {
     }
     
     // Save state to sessionStorage for persistence
+    // But don't save fullscreen state - always restore to normal when reopened
     try {
-      sessionStorage.setItem('chatbot-widget-state', newState)
+      const stateToSave = newState === 'fullscreen' ? 'normal' : newState
+      sessionStorage.setItem('chatbot-widget-state', stateToSave)
     } catch (error) {
       console.warn('Failed to save widget state to sessionStorage:', error)
     }
@@ -113,15 +179,47 @@ function IntegratedWidget() {
     handleStateChange('minimized')
   }, [handleStateChange])
 
+  // Handle error retry
+  const handleErrorRetry = useCallback(() => {
+    setErrorState(null)
+    setNetworkStatus('online')
+  }, [])
+
+  // Handle error dismiss
+  const handleErrorDismiss = useCallback(() => {
+    setErrorState(null)
+  }, [])
+
+  // Handle network retry
+  const handleNetworkRetry = useCallback(() => {
+    setNetworkStatus('reconnecting')
+    // Simulate reconnection
+    setTimeout(() => {
+      setNetworkStatus('online')
+      setErrorState(null)
+    }, 2000)
+  }, [])
+
+  // Handle empty state action (focus input)
+  const handleEmptyStateAction = useCallback(() => {
+    // In a real app, this would focus the input field
+    console.log('Focus input field')
+  }, [])
+
   // Load saved state from sessionStorage
   useEffect(() => {
     try {
       const savedState = sessionStorage.getItem('chatbot-widget-state')
-      if (savedState && ['normal', 'fullscreen', 'minimized'].includes(savedState)) {
+      // Only allow 'normal' or 'minimized' - never restore to fullscreen
+      if (savedState && ['normal', 'minimized'].includes(savedState)) {
         setWidgetState(savedState as WidgetState)
+      } else {
+        // Default to normal if no valid saved state
+        setWidgetState('normal')
       }
     } catch (error) {
       console.warn('Failed to load widget state from sessionStorage:', error)
+      setWidgetState('normal')
     }
   }, [])
 
@@ -257,10 +355,19 @@ function IntegratedWidget() {
         streamingMessageId={streamingMessageId || undefined}
         title="AI Assistant"
         subtitle="Always here to help"
-        initialState="normal"
+        initialState={widgetState}
         onStateChange={handleStateChange}
         onClose={handleClose}
         hasNewMessages={hasNewMessages}
+        errorState={errorState ? {
+          ...errorState,
+          onRetry: handleErrorRetry,
+          onDismiss: handleErrorDismiss
+        } : undefined}
+        networkStatus={networkStatus}
+        onNetworkRetry={handleNetworkRetry}
+        onEmptyStateAction={handleEmptyStateAction}
+        emptyStateType="welcome"
       />
     </div>
   )

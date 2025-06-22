@@ -22,6 +22,18 @@ export interface WidgetContainerProps {
   initialState?: WidgetState;
   onMinimize?: () => void;
   onToggleFullscreen?: () => void;
+  // Enhanced error and loading states
+  errorState?: {
+    type: 'network' | 'api' | 'timeout' | 'rate-limit' | 'auth' | 'generic';
+    title?: string;
+    message?: string;
+    onRetry?: () => void;
+    onDismiss?: () => void;
+  };
+  networkStatus?: 'online' | 'offline' | 'reconnecting' | 'error';
+  onNetworkRetry?: () => void;
+  onEmptyStateAction?: () => void;
+  emptyStateType?: 'welcome' | 'no-messages' | 'disconnected' | 'loading' | 'generic';
 }
 
 const WidgetContainer: React.FC<WidgetContainerProps> = ({
@@ -39,6 +51,11 @@ const WidgetContainer: React.FC<WidgetContainerProps> = ({
   initialState = 'normal',
   onMinimize: externalOnMinimize,
   onToggleFullscreen: externalOnToggleFullscreen,
+  errorState,
+  networkStatus,
+  onNetworkRetry,
+  onEmptyStateAction,
+  emptyStateType = 'welcome',
 }) => {
   const [widgetState, setWidgetState] = useState<WidgetState>(initialState);
   const [previousState, setPreviousState] = useState<WidgetState>('normal');
@@ -201,8 +218,10 @@ const WidgetContainer: React.FC<WidgetContainerProps> = ({
         handleStateChange(savedState, false);
       } else if (!preferences) {
         // Initialize preferences if they don't exist
+        // Don't save fullscreen as initial state
+        const stateToSave = initialState === 'fullscreen' ? 'normal' : initialState;
         storage.setWidgetPreferences({
-          lastState: initialState,
+          lastState: stateToSave,
           rememberState: true, // Default to remembering state
         });
       }
@@ -216,9 +235,11 @@ const WidgetContainer: React.FC<WidgetContainerProps> = ({
       
       if (preferences?.rememberState) {
         storage.setWidgetState(widgetState);
+        // Don't save fullscreen state in preferences
+        const stateToSave = widgetState === 'fullscreen' ? 'normal' : widgetState;
         storage.setWidgetPreferences({
           ...preferences,
-          lastState: widgetState,
+          lastState: stateToSave,
         });
       }
     }
@@ -252,9 +273,11 @@ const WidgetContainer: React.FC<WidgetContainerProps> = ({
   const handleBackdropClick = useCallback((e: React.MouseEvent) => {
     // Only close on backdrop click, not on widget click
     if (e.target === e.currentTarget) {
-      handleStateChange(previousState === 'minimized' ? 'normal' : previousState);
+      // When clicking backdrop in fullscreen, always go to normal mode
+      // Don't use previousState as it might cause issues
+      handleStateChange('normal');
     }
-  }, [previousState, handleStateChange]);
+  }, [handleStateChange]);
 
 
 
@@ -264,15 +287,29 @@ const WidgetContainer: React.FC<WidgetContainerProps> = ({
   }
 
   const getContainerClasses = () => {
-    const baseClasses = 'bg-white rounded-lg shadow-lg border border-gray-200 flex flex-col transition-all duration-300 ease-in-out';
+    const baseClasses = 'bg-white rounded-lg shadow-lg border border-gray-200 flex flex-col';
     const transitionClasses = isTransitioning ? 'pointer-events-none' : '';
+    
+    // Determine animation class based on current state and transition
+    let animationClass = '';
+    if (widgetState === 'normal') {
+      if (previousState === 'minimized') {
+        // Slide up from bottom when opening from minimized
+        animationClass = 'widget-slide-up-enter';
+      } else if (previousState !== 'fullscreen') {
+        // Normal expand for other cases (but not from fullscreen)
+        animationClass = 'widget-normal-enter';
+      }
+      // No animation when coming from fullscreen (instant)
+    }
+    // No animation for fullscreen or minimize transitions (instant)
     
     switch (widgetState) {
       case 'fullscreen':
-        return `${baseClasses} ${transitionClasses} fixed inset-4 z-50 max-w-none max-h-none w-auto h-auto rounded-lg focus:outline-none`;
+        return `${baseClasses} ${transitionClasses} fixed inset-4 z-50 max-w-none max-h-none w-auto h-auto rounded-lg focus:outline-none ${animationClass}`;
       case 'normal':
       default:
-        return `${baseClasses} ${transitionClasses} fixed bottom-4 right-4 w-80 h-96 max-w-sm z-50`;
+        return `${baseClasses} ${transitionClasses} fixed bottom-4 right-4 w-80 h-96 max-w-sm z-50 ${animationClass}`;
     }
   };
 
@@ -328,6 +365,11 @@ const WidgetContainer: React.FC<WidgetContainerProps> = ({
             isLoading={isLoading}
             streamingMessageId={streamingMessageId}
             className="h-full"
+            errorState={errorState}
+            networkStatus={networkStatus}
+            onNetworkRetry={onNetworkRetry}
+            onEmptyStateAction={onEmptyStateAction}
+            emptyStateType={emptyStateType}
           />
         </div>
         

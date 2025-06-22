@@ -191,14 +191,27 @@
   }
 }
 
-@keyframes fullscreenExpand {
+@keyframes normalExpand {
   from {
-    transform: scale(0.9);
-    opacity: 0.8;
+    transform: translateY(20px) scale(0.95);
+    opacity: 0;
   }
   to {
-    transform: scale(1);
+    transform: translateY(0) scale(1);
     opacity: 1;
+  }
+}
+
+@keyframes slideUpFromBottom {
+  from {
+    transform: translateY(100%) scale(0.9);
+    opacity: 0;
+    transform-origin: bottom center;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+    transform-origin: bottom center;
   }
 }
 
@@ -211,16 +224,16 @@
   animation: fadeOut 0.3s ease-out;
 }
 
-.widget-fullscreen-enter {
-  animation: fullscreenExpand 0.4s ease-out;
+.widget-normal-enter {
+  animation: normalExpand 0.3s ease-out;
+}
+
+.widget-slide-up-enter {
+  animation: slideUpFromBottom 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 .minimize-bar-enter {
   animation: minimizeBarBounce 0.5s ease-out;
-}
-
-.minimize-bar-exit {
-  animation: slideOutToBottom 0.3s ease-out;
 }
 
 /* Message animations */

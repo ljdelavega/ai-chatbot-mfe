@@ -15,6 +15,11 @@ export { default as WidgetContainer } from './WidgetContainer';
 export { default as MinimizeBar } from './MinimizeBar';
 export { default as Widget } from './Widget';
 
+// State & Feedback Components
+export { default as ErrorMessage } from './ErrorMessage';
+export { default as EmptyState } from './EmptyState';
+export { default as NetworkStatus } from './NetworkStatus';
+
 // Export types
 export type { ButtonProps } from './Button';
 export type { IconProps } from './Icon';
@@ -26,4 +31,7 @@ export type { MessageInputProps } from './MessageInput';
 export type { ChatHeaderProps } from './ChatHeader';
 export type { WidgetContainerProps, WidgetState } from './WidgetContainer';
 export type { MinimizeBarProps } from './MinimizeBar';
-export type { WidgetProps } from './Widget'; 
+export type { WidgetProps } from './Widget';
+export type { ErrorMessageProps, ErrorType } from './ErrorMessage';
+export type { EmptyStateProps, EmptyStateType } from './EmptyState';
+export type { NetworkStatusProps, NetworkStatusType } from './NetworkStatus'; 

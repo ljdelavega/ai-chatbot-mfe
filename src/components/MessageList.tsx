@@ -1,6 +1,10 @@
 import React, { useEffect, useRef } from 'react';
 import type { Message } from '../lib/types';
 import MessageBubble from './MessageBubble';
+import EmptyState from './EmptyState';
+import ErrorMessage from './ErrorMessage';
+import NetworkStatus from './NetworkStatus';
+import type { EmptyStateType, ErrorType, NetworkStatusType } from './index';
 
 export interface MessageListProps {
   messages: Message[];
@@ -8,6 +12,17 @@ export interface MessageListProps {
   streamingMessageId?: string;
   className?: string;
   autoScroll?: boolean;
+  emptyStateType?: EmptyStateType;
+  errorState?: {
+    type: ErrorType;
+    title?: string;
+    message?: string;
+    onRetry?: () => void;
+    onDismiss?: () => void;
+  };
+  networkStatus?: NetworkStatusType;
+  onNetworkRetry?: () => void;
+  onEmptyStateAction?: () => void;
 }
 
 const MessageList: React.FC<MessageListProps> = ({
@@ -16,6 +31,11 @@ const MessageList: React.FC<MessageListProps> = ({
   streamingMessageId,
   className = '',
   autoScroll = true,
+  emptyStateType = 'welcome',
+  errorState,
+  networkStatus,
+  onNetworkRetry,
+  onEmptyStateAction,
 }) => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -35,28 +55,11 @@ const MessageList: React.FC<MessageListProps> = ({
   }, [streamingMessageId]);
 
   const renderEmptyState = () => (
-    <div className="flex flex-col items-center justify-center h-full text-center p-8">
-      <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-        <svg
-          className="w-8 h-8 text-gray-400"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-          />
-        </svg>
-      </div>
-      <h3 className="text-lg font-medium text-gray-900 mb-2">
-        Start a conversation
-      </h3>
-      <p className="text-gray-600 max-w-sm">
-        Send a message to begin chatting with the AI assistant.
-      </p>
+    <div className="flex flex-col items-center justify-center h-full">
+      <EmptyState
+        type={emptyStateType}
+        onAction={onEmptyStateAction}
+      />
     </div>
   );
 
@@ -76,7 +79,32 @@ const MessageList: React.FC<MessageListProps> = ({
       ref={scrollContainerRef}
       className={`flex-1 overflow-y-auto smooth-scroll custom-scrollbar ${className}`}
     >
-      {messages.length === 0 && !isLoading ? (
+      {/* Network Status Indicator */}
+      {networkStatus && networkStatus !== 'online' && (
+        <div className="p-2 border-b border-gray-100">
+          <NetworkStatus
+            status={networkStatus}
+            onRetry={onNetworkRetry}
+            className="w-full justify-center"
+          />
+        </div>
+      )}
+
+      {/* Error State */}
+      {errorState && (
+        <div className="p-4">
+          <ErrorMessage
+            type={errorState.type}
+            title={errorState.title}
+            message={errorState.message}
+            onRetry={errorState.onRetry}
+            onDismiss={errorState.onDismiss}
+          />
+        </div>
+      )}
+
+      {/* Messages or Empty State */}
+      {messages.length === 0 && !isLoading && !errorState ? (
         renderEmptyState()
       ) : (
         <div className="p-4 space-y-4">

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import WidgetContainer from './WidgetContainer';
 import MinimizeBar from './MinimizeBar';
 import type { WidgetState } from './WidgetContainer';
@@ -20,6 +20,18 @@ export interface WidgetProps {
   minimizeBarPosition?: 'bottom-right' | 'bottom-left' | 'bottom-center';
   onStateChange?: (state: WidgetState) => void;
   hasNewMessages?: boolean;
+  // Enhanced error and loading states
+  errorState?: {
+    type: 'network' | 'api' | 'timeout' | 'rate-limit' | 'auth' | 'generic';
+    title?: string;
+    message?: string;
+    onRetry?: () => void;
+    onDismiss?: () => void;
+  };
+  networkStatus?: 'online' | 'offline' | 'reconnecting' | 'error';
+  onNetworkRetry?: () => void;
+  onEmptyStateAction?: () => void;
+  emptyStateType?: 'welcome' | 'no-messages' | 'disconnected' | 'loading' | 'generic';
 }
 
 const Widget: React.FC<WidgetProps> = ({
@@ -38,40 +50,61 @@ const Widget: React.FC<WidgetProps> = ({
   minimizeBarPosition = 'bottom-right',
   onStateChange,
   hasNewMessages = false,
+  errorState,
+  networkStatus,
+  onNetworkRetry,
+  onEmptyStateAction,
+  emptyStateType = 'welcome',
 }) => {
-  const [widgetState, setWidgetState] = useState<WidgetState>(initialState);
+  // Use the initialState directly as the current state when onStateChange is provided (controlled)
+  // Otherwise maintain internal state (uncontrolled)
+  const isControlled = onStateChange !== undefined;
+  const [internalWidgetState, setInternalWidgetState] = useState<WidgetState>(initialState);
   const [previousState, setPreviousState] = useState<WidgetState>('normal');
+  
+  const widgetState = isControlled ? initialState : internalWidgetState;
 
   const handleMinimize = useCallback(() => {
     setPreviousState(widgetState);
-    setWidgetState('minimized');
-    onStateChange?.('minimized');
-  }, [widgetState, onStateChange]);
+    if (isControlled) {
+      onStateChange('minimized');
+    } else {
+      setInternalWidgetState('minimized');
+    }
+  }, [widgetState, onStateChange, isControlled]);
 
   const handleRestore = useCallback(() => {
+    // When restoring from minimized, go back to the previous state
+    // But ensure we don't get stuck in an invalid state
     const newState = previousState === 'minimized' ? 'normal' : previousState;
-    setWidgetState(newState);
-    onStateChange?.(newState);
-  }, [previousState, onStateChange]);
+    if (isControlled) {
+      onStateChange(newState);
+    } else {
+      setInternalWidgetState(newState);
+    }
+    // Reset previous state to normal after restoring to prevent state confusion
+    setPreviousState('normal');
+  }, [previousState, onStateChange, isControlled]);
 
   const handleToggleFullscreen = useCallback(() => {
     if (widgetState === 'fullscreen') {
-      const newState = previousState === 'minimized' ? 'normal' : previousState;
-      setWidgetState(newState);
-      onStateChange?.(newState);
+      // When exiting fullscreen, always go to normal mode
+      // Don't use previousState here as it might be 'minimized' which would cause issues
+      if (isControlled) {
+        onStateChange('normal');
+      } else {
+        setInternalWidgetState('normal');
+      }
     } else {
+      // When entering fullscreen, save current state as previous
       setPreviousState(widgetState);
-      setWidgetState('fullscreen');
-      onStateChange?.('fullscreen');
+      if (isControlled) {
+        onStateChange('fullscreen');
+      } else {
+        setInternalWidgetState('fullscreen');
+      }
     }
-  }, [widgetState, previousState, onStateChange]);
-
-  // Sync internal state with external state changes
-  useEffect(() => {
-    if (initialState !== widgetState) {
-      setWidgetState(initialState);
-    }
-  }, [initialState, widgetState]);
+  }, [widgetState, onStateChange, isControlled]);
 
   return (
     <>
@@ -93,6 +126,12 @@ const Widget: React.FC<WidgetProps> = ({
           // Pass state management functions
           onMinimize={handleMinimize}
           onToggleFullscreen={handleToggleFullscreen}
+          // Pass enhanced error and loading states
+          errorState={errorState}
+          networkStatus={networkStatus}
+          onNetworkRetry={onNetworkRetry}
+          onEmptyStateAction={onEmptyStateAction}
+          emptyStateType={emptyStateType}
         />
       )}
 

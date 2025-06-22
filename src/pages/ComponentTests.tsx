@@ -5,7 +5,9 @@ import MessageBubble from '../components/MessageBubble'
 import MessageList from '../components/MessageList'
 import MessageInput from '../components/MessageInput'
 import ChatHeader from '../components/ChatHeader'
-
+import ErrorMessage from '../components/ErrorMessage'
+import EmptyState from '../components/EmptyState'
+import NetworkStatus from '../components/NetworkStatus'
 import MinimizeBar from '../components/MinimizeBar'
 import Widget from '../components/Widget'
 import type { Message } from '../lib/types'
@@ -110,7 +112,7 @@ function ComponentTests() {
               <span className="text-sm text-gray-500">All components with testing scenarios</span>
             </div>
             <div className="text-sm text-gray-600">
-              11 Components • React + TypeScript
+              14 Components • React + TypeScript
             </div>
           </div>
         </div>
@@ -408,6 +410,98 @@ function ComponentTests() {
                       />
                     </div>
                   )}
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Error & State Components Tests */}
+          <section>
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Error & State Components Tests</h2>
+            
+            <div className="space-y-8">
+              {/* ErrorMessage Tests */}
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">ErrorMessage Component</h3>
+                <div className="space-y-4">
+                  <ErrorMessage 
+                    type="network"
+                    onRetry={() => alert('Network retry clicked')}
+                    onDismiss={() => alert('Error dismissed')}
+                  />
+                  <ErrorMessage 
+                    type="api"
+                    title="Custom API Error"
+                    message="This is a custom error message for API failures."
+                    onRetry={() => alert('API retry clicked')}
+                  />
+                  <ErrorMessage 
+                    type="timeout"
+                    onRetry={() => alert('Timeout retry clicked')}
+                  />
+                  <ErrorMessage 
+                    type="rate-limit"
+                    onDismiss={() => alert('Rate limit dismissed')}
+                  />
+                  <ErrorMessage 
+                    type="auth"
+                    title="Authentication Required"
+                    message="Please check your API key configuration."
+                  />
+                </div>
+              </div>
+
+              {/* EmptyState Tests */}
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">EmptyState Component</h3>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="border rounded-lg p-4 h-64 bg-gray-50">
+                    <EmptyState 
+                      type="welcome"
+                      onAction={() => alert('Welcome action clicked')}
+                    />
+                  </div>
+                  <div className="border rounded-lg p-4 h-64 bg-gray-50">
+                    <EmptyState 
+                      type="no-messages"
+                      onAction={() => alert('No messages action clicked')}
+                    />
+                  </div>
+                  <div className="border rounded-lg p-4 h-64 bg-gray-50">
+                    <EmptyState 
+                      type="disconnected"
+                      onAction={() => alert('Reconnect clicked')}
+                    />
+                  </div>
+                  <div className="border rounded-lg p-4 h-64 bg-gray-50">
+                    <EmptyState 
+                      type="loading"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* NetworkStatus Tests */}
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">NetworkStatus Component</h3>
+                <div className="space-y-4">
+                  <div className="flex flex-wrap gap-4">
+                    <NetworkStatus 
+                      status="online"
+                      autoHide={false}
+                    />
+                    <NetworkStatus 
+                      status="offline"
+                      onRetry={() => alert('Offline retry clicked')}
+                    />
+                    <NetworkStatus 
+                      status="reconnecting"
+                    />
+                    <NetworkStatus 
+                      status="error"
+                      onRetry={() => alert('Error retry clicked')}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
