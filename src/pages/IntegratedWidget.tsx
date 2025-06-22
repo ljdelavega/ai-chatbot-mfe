@@ -10,6 +10,7 @@ function IntegratedWidget() {
   const [messages, setMessages] = useState<Message[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [streamingMessageId, setStreamingMessageId] = useState<string | null>(null)
+  const [hasNewMessages, setHasNewMessages] = useState(false)
 
   // Initialize with welcome message
   useEffect(() => {
@@ -81,11 +82,21 @@ function IntegratedWidget() {
         : msg
     ))
     setStreamingMessageId(null)
-  }, [])
+
+    // Show new message indicator if widget is minimized
+    if (widgetState === 'minimized') {
+      setHasNewMessages(true)
+    }
+  }, [widgetState])
 
   // Handle widget state changes
   const handleStateChange = useCallback((newState: WidgetState) => {
     setWidgetState(newState)
+    
+    // Clear new message indicator when widget is opened
+    if (newState !== 'minimized' && hasNewMessages) {
+      setHasNewMessages(false)
+    }
     
     // Save state to sessionStorage for persistence
     try {
@@ -93,7 +104,7 @@ function IntegratedWidget() {
     } catch (error) {
       console.warn('Failed to save widget state to sessionStorage:', error)
     }
-  }, [])
+  }, [hasNewMessages])
 
   // Handle widget close
   const handleClose = useCallback(() => {
@@ -249,6 +260,7 @@ function IntegratedWidget() {
         initialState="normal"
         onStateChange={handleStateChange}
         onClose={handleClose}
+        hasNewMessages={hasNewMessages}
       />
     </div>
   )

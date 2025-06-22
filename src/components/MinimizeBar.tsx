@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef, useCallback } from 'react';
 import { Icon } from './index';
 
 export interface MinimizeBarProps {
@@ -7,6 +7,9 @@ export interface MinimizeBarProps {
   onClick?: () => void;
   className?: string;
   position?: 'bottom-right' | 'bottom-left' | 'bottom-center';
+  hasNewMessages?: boolean;
+  isVisible?: boolean;
+  autoFocus?: boolean;
 }
 
 const MinimizeBar: React.FC<MinimizeBarProps> = ({
@@ -15,39 +18,101 @@ const MinimizeBar: React.FC<MinimizeBarProps> = ({
   onClick,
   className = '',
   position = 'bottom-right',
+  hasNewMessages = false,
+  isVisible = true,
+  autoFocus = false,
 }) => {
-  const getPositionClasses = () => {
-    switch (position) {
-      case 'bottom-left':
-        return 'bottom-4 left-4';
-      case 'bottom-center':
-        return 'bottom-4 left-1/2 transform -translate-x-1/2';
-      case 'bottom-right':
-      default:
-        return 'bottom-4 right-4';
+  const buttonRef = useRef<HTMLDivElement>(null);
+  // Auto-focus management
+  useEffect(() => {
+    if (autoFocus && isVisible && buttonRef.current) {
+      // Small delay to ensure smooth transition
+      const timer = setTimeout(() => {
+        buttonRef.current?.focus();
+      }, 100);
+      return () => clearTimeout(timer);
     }
+  }, [autoFocus, isVisible]);
+
+  // Enhanced click handler with validation
+  const handleClick = useCallback((e: React.MouseEvent | React.KeyboardEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (onClick && isVisible) {
+      onClick();
+    }
+  }, [onClick, isVisible]);
+
+  // Enhanced keyboard handler
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (!isVisible) return;
+
+    switch (e.key) {
+      case 'Enter':
+      case ' ':
+        handleClick(e);
+        break;
+      case 'Escape':
+        // Allow escape to bubble up for potential widget management
+        break;
+      default:
+        break;
+    }
+  }, [handleClick, isVisible]);
+
+  const getPositionClasses = () => {
+    const basePosition = (() => {
+      switch (position) {
+        case 'bottom-left':
+          return 'bottom-4 left-4';
+        case 'bottom-center':
+          return 'bottom-4 left-1/2 transform -translate-x-1/2';
+        case 'bottom-right':
+        default:
+          return 'bottom-4 right-4';
+      }
+    })();
+
+    // Add visibility classes
+    const visibilityClasses = isVisible 
+      ? 'opacity-100 translate-y-0 pointer-events-auto' 
+      : 'opacity-0 translate-y-2 pointer-events-none';
+
+    return `${basePosition} ${visibilityClasses}`;
   };
+
+  const getNotificationClasses = () => {
+    return hasNewMessages 
+      ? 'opacity-100 scale-100' 
+      : 'opacity-0 scale-0';
+  };
+
+  // Don't render if not visible and fully transitioned out
+  if (!isVisible && !hasNewMessages) {
+    return null;
+  }
 
   return (
     <div
+      ref={buttonRef}
       className={`
         fixed z-40 ${getPositionClasses()}
         bg-white border border-gray-200 rounded-full shadow-lg
         cursor-pointer hover:shadow-xl
         transition-all duration-300 ease-in-out
         hover:scale-105 active:scale-95
+        focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+        select-none
         ${className}
       `}
-      onClick={onClick}
+      onClick={handleClick}
       role="button"
-      tabIndex={0}
-      aria-label={`Restore ${title}`}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          onClick?.();
-        }
-      }}
+      tabIndex={isVisible ? 0 : -1}
+      aria-label={`${hasNewMessages ? 'New messages - ' : ''}Restore ${title}${subtitle ? ` - ${subtitle}` : ''}`}
+      aria-pressed={false}
+      aria-expanded={false}
+      onKeyDown={handleKeyDown}
     >
       <div className="flex items-center gap-3 px-4 py-3">
         {/* Bot avatar/icon */}
@@ -73,9 +138,18 @@ const MinimizeBar: React.FC<MinimizeBarProps> = ({
         </div>
       </div>
       
-      {/* Notification dot (optional) */}
-      <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white opacity-0 transition-opacity duration-200">
-        {/* This could be shown when there are new messages */}
+      {/* Notification dot */}
+      <div 
+        className={`
+          absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white
+          transition-all duration-200 ${getNotificationClasses()}
+        `}
+        aria-hidden="true"
+      >
+        {/* Pulsing animation for new messages */}
+        {hasNewMessages && (
+          <div className="absolute inset-0 w-3 h-3 bg-red-500 rounded-full animate-ping opacity-75" />
+        )}
       </div>
     </div>
   );

@@ -19,6 +19,7 @@ export interface WidgetProps {
   initialState?: WidgetState;
   minimizeBarPosition?: 'bottom-right' | 'bottom-left' | 'bottom-center';
   onStateChange?: (state: WidgetState) => void;
+  hasNewMessages?: boolean;
 }
 
 const Widget: React.FC<WidgetProps> = ({
@@ -36,6 +37,7 @@ const Widget: React.FC<WidgetProps> = ({
   initialState = 'normal',
   minimizeBarPosition = 'bottom-right',
   onStateChange,
+  hasNewMessages = false,
 }) => {
   const [widgetState, setWidgetState] = useState<WidgetState>(initialState);
   const [previousState, setPreviousState] = useState<WidgetState>('normal');
@@ -101,6 +103,9 @@ const Widget: React.FC<WidgetProps> = ({
           subtitle={subtitle}
           onClick={handleRestore}
           position={minimizeBarPosition}
+          hasNewMessages={hasNewMessages}
+          isVisible={widgetState === 'minimized'}
+          autoFocus={widgetState === 'minimized'}
         />
       )}
     </>
