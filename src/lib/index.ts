@@ -8,5 +8,8 @@ export * from './utils';
 export * from './storage';
 
 // Types
-export type { Message, ChatRequest, ChatResponse } from './types';
-export type { WidgetPreferences } from './storage'; 
+export type { Message, ChatRequest, ChatResponse, WidgetConfig, ApiError, StreamChunk } from './types';
+export type { WidgetPreferences } from './storage';
+
+// API Types (from OpenAPI spec)
+export * from './api-types'; 

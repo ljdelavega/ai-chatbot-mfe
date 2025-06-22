@@ -1,40 +1,46 @@
-// Core message types that match the AI Chatbot API
-export interface Message {
+// Core types for the AI Chatbot Widget
+// Re-exports and extensions of API types for internal use
+
+import type { 
+  Message as ApiMessage, 
+  MessageRole,
+  ChatRequest as ApiChatRequest,
+  ChatResponse as ApiChatResponse,
+  ApiConfig,
+  StreamChunk as ApiStreamChunk,
+  ApiError as BaseApiError
+} from './api-types';
+
+// Extended message interface for widget use (adds UI-specific fields)
+export interface Message extends Omit<ApiMessage, 'role'> {
   id: string;
-  role: 'user' | 'assistant';
+  role: MessageRole;
   content: string;
   timestamp: Date;
-  status?: 'loading' | 'error' | 'complete';
+  status?: 'loading' | 'error' | 'complete' | 'streaming';
 }
 
-// API request/response types
-export interface ChatRequest {
-  messages: Omit<Message, 'id' | 'timestamp' | 'status'>[];
-}
+// Re-export API types for compatibility
+export type { 
+  MessageRole,
+  ApiChatRequest as ChatRequest,
+  ApiChatResponse as ChatResponse,
+  ApiConfig
+};
 
-export interface ChatResponse {
-  content: string;
-  model: string;
-}
-
-// Widget configuration types
-export interface WidgetConfig {
-  apiUrl: string;
-  apiKey: string;
+// Widget configuration types (extends API config)
+export interface WidgetConfig extends ApiConfig {
   themeColor?: string;
   enableHistory?: boolean;
   debug?: boolean;
 }
 
-// Error types
-export interface ApiError {
-  message: string;
-  status?: number;
-  code?: string;
+// Widget-specific error type (extends API error)
+export interface ApiError extends BaseApiError {
+  // Additional widget-specific error properties can be added here
 }
 
-// Streaming types
-export interface StreamChunk {
-  content: string;
-  done: boolean;
+// Widget-specific streaming types
+export interface StreamChunk extends ApiStreamChunk {
+  // Additional widget-specific streaming properties can be added here
 } 
