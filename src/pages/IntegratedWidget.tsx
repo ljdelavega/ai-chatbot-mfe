@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import { useCallback, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import Widget from '../components/Widget'
 import { useChat, useWidgetConfig, useWidgetState } from '../hooks'
@@ -30,7 +30,9 @@ function IntegratedWidget() {
     initialState: 'normal',
     enablePersistence: true,
     onStateChange: (newState, prevState) => {
-      console.log(`Widget state changed: ${prevState} → ${newState}`)
+      if (import.meta.env.DEV && config?.debug) {
+        console.log(`Widget state changed: ${prevState} → ${newState}`)
+      }
     }
   })
 
@@ -50,14 +52,18 @@ function IntegratedWidget() {
     }
   })
 
-  // Debug logging for development
-  console.log('🔍 Debug Info:', {
-    messageCount: messages.length,
-    isLoading,
-    streamingMessageId,
-    hasError: !!chatError,
-    config: config?.baseUrl
-  })
+  // Debug logging for development (only on significant state changes)
+  useEffect(() => {
+    if (import.meta.env.DEV && config?.debug) {
+      console.log('🔍 Debug Info:', {
+        messageCount: messages.length,
+        isLoading,
+        streamingMessageId,
+        hasError: !!chatError,
+        config: config?.baseUrl
+      });
+    }
+  }, [messages.length, isLoading, streamingMessageId, chatError, config?.baseUrl, config?.debug]);
 
   // The useChat hook now handles welcome message initialization automatically
 

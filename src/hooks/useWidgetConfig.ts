@@ -31,6 +31,9 @@ export function useWidgetConfig({
   const [errors, setErrors] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Stabilize defaults object to prevent infinite re-renders
+  const stableDefaults = useState(() => defaults)[0];
+
   const validateConfig = useCallback((cfg: Partial<WidgetConfig>): { valid: boolean; errors: string[] } => {
     const validationErrors: string[] = [];
 
@@ -108,7 +111,8 @@ export function useWidgetConfig({
     return config;
   }, []);
 
-  const loadConfiguration = useCallback(() => {
+  // Load configuration on mount only
+  useEffect(() => {
     setIsLoading(true);
     setErrors([]);
 
@@ -129,8 +133,10 @@ export function useWidgetConfig({
         elementConfig = readConfigFromElement(element);
       }
       // If no element found and we have defaults, use defaults (development mode)
-      else if (defaults && Object.keys(defaults).length > 0) {
-        console.log('🔧 Development mode: Using provided defaults instead of mount element');
+      else if (stableDefaults && Object.keys(stableDefaults).length > 0) {
+        if (import.meta.env.DEV) {
+          console.log('🔧 Development mode: Using provided defaults instead of mount element');
+        }
         elementConfig = {}; // Use empty config, rely on defaults
       }
       // If no element and no meaningful defaults, show error
@@ -145,7 +151,7 @@ export function useWidgetConfig({
       // Merge with defaults
       const mergedConfig = {
         ...DEFAULT_CONFIG,
-        ...defaults,
+        ...stableDefaults,
         ...elementConfig,
       };
 
@@ -169,12 +175,7 @@ export function useWidgetConfig({
     } finally {
       setIsLoading(false);
     }
-  }, [mountElement, defaults, validateConfig, readConfigFromElement]);
-
-  // Load configuration on mount and when dependencies change
-  useEffect(() => {
-    loadConfiguration();
-  }, [loadConfiguration]);
+  }, []); // Empty dependency array - run only once on mount
 
   return {
     config,

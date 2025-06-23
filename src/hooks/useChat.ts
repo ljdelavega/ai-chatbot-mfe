@@ -239,14 +239,6 @@ export function useChat({ config, onError }: UseChatOptions): UseChatReturn {
         }
 
         if (chunk.done) {
-          // Process any remaining chunks before completing (only for production batching)
-          if (pendingChunksRef.current.length > 0 && 
-              !config.baseUrl.includes('localhost:8000')) {
-            processPendingChunks(assistantMessageId);
-            // Small delay to ensure final update is processed
-            await new Promise(resolve => setTimeout(resolve, 100));
-          }
-
           // Stream completed successfully
           updateMessage(assistantMessageId, { 
             status: 'complete',
@@ -269,35 +261,20 @@ export function useChat({ config, onError }: UseChatOptions): UseChatReturn {
             continue;
           }
 
-          // For development/mock API, process chunks immediately
-          // For production, use batching for better performance
-          if (config.baseUrl.includes('localhost:8000') && import.meta.env.DEV) {
-            // Process chunk immediately for mock API to avoid duplication
-            setMessages(prev => prev.map(msg => {
-              if (msg.id === assistantMessageId) {
-                const newContent = (msg.content || '') + chunkData;
-                return { 
-                  ...msg, 
-                  content: newContent,
-                  status: 'streaming',
-                  timestamp: new Date()
-                };
-              }
-              return msg;
-            }));
-          } else {
-            // Add chunk to pending processing queue for production
-            pendingChunksRef.current.push(chunkData);
-
-            // Batch process chunks for better performance
-            if (chunkProcessingTimeoutRef.current) {
-              clearTimeout(chunkProcessingTimeoutRef.current);
+          // Always process chunks immediately for real-time streaming
+          // This ensures content is properly accumulated and rendered
+          setMessages(prev => prev.map(msg => {
+            if (msg.id === assistantMessageId) {
+              const newContent = (msg.content || '') + chunkData;
+              return { 
+                ...msg, 
+                content: newContent,
+                status: 'streaming',
+                timestamp: new Date()
+              };
             }
-
-            chunkProcessingTimeoutRef.current = setTimeout(() => {
-              processPendingChunks(assistantMessageId);
-            }, streamingConfigRef.current.chunkDelay);
-          }
+            return msg;
+          }));
         }
       }
     } catch (err) {
