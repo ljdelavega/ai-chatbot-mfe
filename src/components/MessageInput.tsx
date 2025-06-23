@@ -54,7 +54,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
   const canSend = message.trim().length > 0 && !disabled;
 
   return (
-    <div className={`flex items-end gap-2 p-4 border-t border-gray-200 bg-white ${className}`}>
+    <div className={`flex items-start gap-2 p-4 border-t border-gray-200 bg-white ${className}`}>
       <div className="flex-1 relative">
         <textarea
           ref={textareaRef}
@@ -88,7 +88,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
         onClick={handleSend}
         disabled={!canSend}
         size="md"
-        className="flex-shrink-0"
+        className="flex-shrink-0 mt-1"
         aria-label="Send message"
       >
         <Icon name="send" size={16} />
