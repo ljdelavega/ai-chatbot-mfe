@@ -53,11 +53,11 @@ export function useChat({ config, onError }: UseChatOptions): UseChatReturn {
   const abortControllerRef = useRef<AbortController | null>(null);
   const lastUserMessageRef = useRef<string>('');
   const retryCountRef = useRef<number>(0);
-  const streamTimeoutRef = useRef<number | null>(null);
+  const streamTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   
   // Performance optimization: batch chunk updates
   const pendingChunksRef = useRef<string[]>([]);
-  const chunkProcessingTimeoutRef = useRef<number | null>(null);
+  const chunkProcessingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Enhanced streaming configuration
   const streamingConfigRef = useRef<StreamingConfig>({

@@ -4,6 +4,19 @@ import react from '@vitejs/plugin-react'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  define: {
+    // Define process.env for browser compatibility
+    'process.env': JSON.stringify({}),
+    // Replace import.meta.env references with static values for embedding
+    'import.meta.env.DEV': JSON.stringify(false),
+    'import.meta.env.PROD': JSON.stringify(true),
+    'import.meta.env.MODE': JSON.stringify('production'),
+    // Set default values for Vite environment variables
+    'import.meta.env.VITE_API_URL': JSON.stringify(''),
+    'import.meta.env.VITE_API_KEY': JSON.stringify(''),
+    'import.meta.env.VITE_DEBUG_MODE': JSON.stringify('false'),
+    'import.meta.env.VITE_ENABLE_HISTORY': JSON.stringify('false'),
+  },
   build: {
     lib: {
       // Entry point for the widget
