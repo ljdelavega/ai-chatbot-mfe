@@ -72,10 +72,11 @@ export function useChat({ config, onError }: UseChatOptions): UseChatReturn {
     const initializeApiClient = async () => {
       try {
         // Use real API if we have environment variables set (indicating user wants real API)
-        // Otherwise fall back to mock for development
+        // OR if we're not in development (localhost) - assume production deployment
         const useRealApi = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_KEY;
+        const isProductionDeployment = !config.baseUrl.includes('localhost') && !config.baseUrl.includes('127.0.0.1');
         
-        if (useRealApi || config.baseUrl.includes('localhost:8000')) {
+        if (useRealApi || config.baseUrl.includes('localhost:8000') || isProductionDeployment) {
           console.log('🚀 Using Real AI Chatbot API at', config.baseUrl);
           const { ChatbotApiClient } = await import('../lib/api');
           apiClientRef.current = new ChatbotApiClient(config.baseUrl, config.apiKey || undefined);
