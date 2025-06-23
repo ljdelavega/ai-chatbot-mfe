@@ -4,15 +4,16 @@ import Widget from '../components/Widget'
 import { useChat, useWidgetConfig, useWidgetState } from '../hooks'
 
 
+// Move mockConfig outside component to prevent recreation on every render
+const mockConfig = {
+  baseUrl: import.meta.env.VITE_API_URL || 'http://localhost:8000',
+  apiKey: import.meta.env.VITE_API_KEY || 'your-api-key',
+  themeColor: '#3b82f6',
+  enableHistory: import.meta.env.VITE_ENABLE_HISTORY === 'true' || false,
+  debug: import.meta.env.VITE_DEBUG_MODE === 'true' || true
+}
+
 function IntegratedWidget() {
-  // Configuration from environment variables - in real embedding this would come from data attributes
-  const mockConfig = {
-    baseUrl: import.meta.env.VITE_API_URL || 'http://localhost:8000',
-    apiKey: import.meta.env.VITE_API_KEY || 'your-api-key',
-    themeColor: '#3b82f6',
-    enableHistory: import.meta.env.VITE_ENABLE_HISTORY === 'true' || false,
-    debug: import.meta.env.VITE_DEBUG_MODE === 'true' || true
-  }
 
   // Use our new hooks
   const { config, isValid, errors: configErrors } = useWidgetConfig({

@@ -25,7 +25,7 @@ export default defineConfig(({ command }) => {
     build: {
       lib: {
         // Entry point for the widget
-        entry: 'src/main.tsx',
+        entry: 'src/embed.tsx',
         name: 'AIChatbotWidget',
         // Output filename
         fileName: (format) => `chatbot-widget.${format}.js`,

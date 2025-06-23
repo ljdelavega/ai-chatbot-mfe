@@ -48,8 +48,28 @@ export function useWidgetConfig({
       }
     }
 
+    // API key validation - allow empty for same-origin requests
     if (!cfg.apiKey) {
-      validationErrors.push('apiKey is required (data-api-key attribute)');
+      // Check if this is a same-origin request
+      if (cfg.baseUrl) {
+        try {
+          const apiUrl = new URL(cfg.baseUrl);
+          const currentOrigin = window.location.origin;
+          
+          if (apiUrl.origin === currentOrigin) {
+            // Same-origin request - API key is optional
+            console.log('🔒 Same-origin API detected - API key not required');
+          } else {
+            // Cross-origin request - API key is required
+            validationErrors.push('apiKey is required for cross-origin requests (data-api-key attribute)');
+          }
+        } catch {
+          // If URL parsing failed, we already caught it above
+          validationErrors.push('apiKey is required (data-api-key attribute)');
+        }
+      } else {
+        validationErrors.push('apiKey is required (data-api-key attribute)');
+      }
     } else if (cfg.apiKey.length < 10) {
       validationErrors.push('apiKey appears to be too short (minimum 10 characters)');
     }

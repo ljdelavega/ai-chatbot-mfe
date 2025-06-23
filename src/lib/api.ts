@@ -5,13 +5,13 @@ import type { ChatRequest, ChatResponse, StreamChunk } from './types';
  */
 export class ChatbotApiClient {
   private apiUrl: string;
-  private apiKey: string;
+  private apiKey: string | null;
 
   private maxConnectionRetries: number = 3;
 
-  constructor(apiUrl: string, apiKey: string) {
+  constructor(apiUrl: string, apiKey?: string) {
     this.apiUrl = apiUrl.replace(/\/$/, ''); // Remove trailing slash
-    this.apiKey = apiKey;
+    this.apiKey = apiKey || null;
   }
 
   // Getter properties for accessing private fields
@@ -19,7 +19,7 @@ export class ChatbotApiClient {
     return this.apiUrl;
   }
 
-  get key(): string {
+  get key(): string | null {
     return this.apiKey;
   }
 
@@ -27,12 +27,18 @@ export class ChatbotApiClient {
    * Send a chat request and get a complete response
    */
   async chat(request: ChatRequest): Promise<ChatResponse> {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    
+    // Only add API key header if we have one
+    if (this.apiKey) {
+      headers['X-API-Key'] = this.apiKey;
+    }
+
     const response = await fetch(`${this.apiUrl}/api/v1/chat`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': this.apiKey,
-      },
+      headers,
       body: JSON.stringify(request),
     });
 
@@ -53,15 +59,21 @@ export class ChatbotApiClient {
 
     while (attempt < maxAttempts) {
       try {
+        const headers: Record<string, string> = {
+          'Content-Type': 'application/json',
+          'Accept': 'text/plain',
+          'Cache-Control': 'no-cache',
+          'Connection': 'keep-alive',
+        };
+        
+        // Only add API key header if we have one
+        if (this.apiKey) {
+          headers['X-API-Key'] = this.apiKey;
+        }
+
         const response = await fetch(`${this.apiUrl}/api/v1/chat/stream`, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-API-Key': this.apiKey,
-            'Accept': 'text/plain',
-            'Cache-Control': 'no-cache',
-            'Connection': 'keep-alive',
-          },
+          headers,
           body: JSON.stringify(request),
         });
 

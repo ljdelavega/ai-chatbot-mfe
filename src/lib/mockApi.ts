@@ -6,18 +6,18 @@ import type { ChatRequest, ChatResponse, StreamChunk } from './types';
  */
 export class MockChatbotApiClient {
   private apiUrl: string;
-  private apiKey: string;
+  private apiKey: string | null;
 
-  constructor(apiUrl: string, apiKey: string) {
+  constructor(apiUrl: string, apiKey?: string) {
     this.apiUrl = apiUrl.replace(/\/$/, '');
-    this.apiKey = apiKey;
+    this.apiKey = apiKey || null;
   }
 
   get baseUrl(): string {
     return this.apiUrl;
   }
 
-  get key(): string {
+  get key(): string | null {
     return this.apiKey;
   }
 

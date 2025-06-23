@@ -21,7 +21,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
   const bubbleClasses = isUser
     ? 'bg-blue-600 text-white rounded-lg rounded-br-none'
     : 'bg-white border border-gray-200 text-gray-900 rounded-lg rounded-bl-none';
-  
+
   const containerClasses = isUser
     ? 'flex justify-end'
     : 'flex justify-start';

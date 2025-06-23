@@ -78,10 +78,10 @@ export function useChat({ config, onError }: UseChatOptions): UseChatReturn {
         if (useRealApi || config.baseUrl.includes('localhost:8000')) {
           console.log('🚀 Using Real AI Chatbot API at', config.baseUrl);
           const { ChatbotApiClient } = await import('../lib/api');
-          apiClientRef.current = new ChatbotApiClient(config.baseUrl, config.apiKey);
+          apiClientRef.current = new ChatbotApiClient(config.baseUrl, config.apiKey || undefined);
         } else {
           console.log('🔧 Using Mock API for development testing');
-          apiClientRef.current = new MockChatbotApiClient(config.baseUrl, config.apiKey);
+          apiClientRef.current = new MockChatbotApiClient(config.baseUrl, config.apiKey || undefined);
         }
       } catch (err) {
         console.error('Failed to initialize API client:', err);

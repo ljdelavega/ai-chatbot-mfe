@@ -14,6 +14,13 @@ Add this div to your HTML where you want the widget to appear (it will position 
      data-api-key="your-secure-api-key-here"></div>
 ```
 
+**Note for Same-Origin Requests:** If your widget is embedded on the same domain as your API (e.g., both on `https://yourdomain.com`), you can omit the `data-api-key` attribute:
+
+```html
+<div id="ai-chatbot-root" 
+     data-api-url="/api/v1"></div>
+```
+
 ### 2. Load the Widget
 
 Add the script and stylesheet to your HTML:
@@ -34,10 +41,14 @@ All configuration is done through `data-*` attributes on the mount element:
 | Attribute | Required | Default | Description |
 |-----------|----------|---------|-------------|
 | `data-api-url` | ✅ Yes | - | Your AI Chatbot API endpoint |
-| `data-api-key` | ✅ Yes | - | Your API authentication key |
+| `data-api-key` | ❌ Conditional* | - | Your API authentication key |
 | `data-theme-color` | ❌ No | `#3b82f6` | Primary color for the widget |
 | `data-enable-history` | ❌ No | `false` | Enable conversation persistence |
 | `data-debug` | ❌ No | `false` | Enable debug logging |
+
+**\* API Key Requirements:**
+- **Required** for cross-origin requests (widget on different domain than API)
+- **Optional** for same-origin requests (widget and API on same domain)
 
 ### Example with All Options
 
